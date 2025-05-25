@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Heart, MapPin, Calendar, Weight } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,9 @@ interface DogCardProps {
 }
 
 const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) => {
+  const [imageError, setImageError] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   const getBreedDisplay = () => {
     const breeds = [dog["Breed_AI_1"], dog["Breed_AI_2"], dog["Breed_AI_3"]]
       .filter(Boolean)
@@ -64,13 +67,75 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
     return dog["Location_kennel"] || "At Shelter";
   };
 
+  // Get available photos
+  const getAvailablePhotos = () => {
+    const photos = [dog["Photo_1"], dog["Photo_2"], dog["Photo_3"]]
+      .filter(photo => photo && photo.trim() && !photo.includes('[Photo') && photo !== 'N/A');
+    return photos;
+  };
+
+  const availablePhotos = getAvailablePhotos();
+  const hasPhotos = availablePhotos.length > 0;
+  const currentPhoto = hasPhotos ? availablePhotos[currentImageIndex] : null;
+
+  const nextImage = () => {
+    if (availablePhotos.length > 1) {
+      setCurrentImageIndex((prev) => (prev + 1) % availablePhotos.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (availablePhotos.length > 1) {
+      setCurrentImageIndex((prev) => (prev - 1 + availablePhotos.length) % availablePhotos.length);
+    }
+  };
+
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 bg-white border-orange-100 hover:border-orange-300 overflow-hidden">
       <CardHeader className="p-0">
         <div className="relative">
-          {/* Placeholder for dog photo - using a gradient with dog emoji */}
-          <div className="h-48 bg-gradient-to-br from-orange-200 to-amber-200 flex items-center justify-center">
-            <div className="text-6xl">🐕</div>
+          {/* Dog photo or placeholder */}
+          <div className="h-48 bg-gradient-to-br from-orange-200 to-amber-200 flex items-center justify-center relative overflow-hidden">
+            {hasPhotos && !imageError ? (
+              <>
+                <img
+                  src={currentPhoto}
+                  alt={`${dog.Name} - Photo ${currentImageIndex + 1}`}
+                  className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
+                />
+                {/* Image navigation buttons */}
+                {availablePhotos.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/70 transition-colors"
+                    >
+                      ›
+                    </button>
+                    {/* Photo indicator dots */}
+                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                      {availablePhotos.map((_, index) => (
+                        <div
+                          key={index}
+                          className={`w-2 h-2 rounded-full ${
+                            index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="text-6xl">🐕</div>
+            )}
           </div>
           
           {/* Favorite button */}
