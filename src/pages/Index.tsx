@@ -1,14 +1,16 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Heart, MapPin, Calendar, Weight } from 'lucide-react';
+import { Search, Heart, MapPin, Calendar, Weight, Grid, List } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import DogCard from '@/components/DogCard';
+import DogTable from '@/components/DogTable';
 import BreedFilter from '@/components/BreedFilter';
+import FosterFilter from '@/components/FosterFilter';
 
 interface Dog {
   "Dog ID": number;
@@ -52,6 +54,8 @@ const Index = () => {
   const [selectedBreed, setSelectedBreed] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [fosterStatus, setFosterStatus] = useState('not-foster');
 
   const { data: dogs = [], isLoading, error } = useQuery({
     queryKey: ['dogs'],
@@ -101,7 +105,11 @@ const Index = () => {
                           normalizeBreed(dog["Breed_AI_2"]) === selectedBreed ||
                           normalizeBreed(dog["Breed_AI_3"]) === selectedBreed;
       
-      return matchesSearch && matchesBreed;
+      const matchesFoster = fosterStatus === 'all' ||
+                           (fosterStatus === 'foster' && dog["Foster_status"] === "Yes") ||
+                           (fosterStatus === 'not-foster' && dog["Foster_status"] !== "Yes");
+      
+      return matchesSearch && matchesBreed && matchesFoster;
     });
 
     // Sort dogs
@@ -116,7 +124,7 @@ const Index = () => {
           return a.Name.localeCompare(b.Name);
       }
     });
-  }, [dogs, searchTerm, selectedBreed, sortBy]);
+  }, [dogs, searchTerm, selectedBreed, sortBy, fosterStatus]);
 
   const toggleFavorite = (dogId: number) => {
     setFavorites(prev => 
@@ -171,7 +179,7 @@ const Index = () => {
             <CardTitle className="text-center text-xl text-gray-800">Find Your Match</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
@@ -188,6 +196,11 @@ const Index = () => {
                 onBreedChange={setSelectedBreed}
               />
               
+              <FosterFilter
+                selectedFosterStatus={fosterStatus}
+                onFosterStatusChange={setFosterStatus}
+              />
+              
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="border-orange-200">
                   <SelectValue placeholder="Sort by..." />
@@ -199,6 +212,15 @@ const Index = () => {
                 </SelectContent>
               </Select>
 
+              <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'table')}>
+                <ToggleGroupItem value="grid" className="border-orange-200">
+                  <Grid className="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="table" className="border-orange-200">
+                  <List className="h-4 w-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+
               <div className="text-center text-sm text-gray-600 flex items-center justify-center">
                 <span className="bg-orange-100 px-3 py-2 rounded-full">
                   {filteredDogs.length} dogs available
@@ -209,7 +231,7 @@ const Index = () => {
         </Card>
       </section>
 
-      {/* Dogs Grid */}
+      {/* Dogs Display */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         {filteredDogs.length === 0 ? (
           <div className="text-center py-12">
@@ -218,16 +240,26 @@ const Index = () => {
             <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredDogs.map((dog) => (
-              <DogCard
-                key={dog["Dog ID"]}
-                dog={dog}
-                isFavorite={favorites.includes(dog["Dog ID"])}
-                onToggleFavorite={() => toggleFavorite(dog["Dog ID"])}
+          <>
+            {viewMode === 'grid' ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredDogs.map((dog) => (
+                  <DogCard
+                    key={dog["Dog ID"]}
+                    dog={dog}
+                    isFavorite={favorites.includes(dog["Dog ID"])}
+                    onToggleFavorite={() => toggleFavorite(dog["Dog ID"])}
+                  />
+                ))}
+              </div>
+            ) : (
+              <DogTable
+                dogs={filteredDogs}
+                favorites={favorites}
+                onToggleFavorite={toggleFavorite}
               />
-            ))}
-          </div>
+            )}
+          </>
         )}
       </section>
     </div>

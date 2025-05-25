@@ -95,13 +95,13 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
       <CardHeader className="p-0">
         <div className="relative">
           {/* Dog photo or placeholder */}
-          <div className="h-48 bg-gradient-to-br from-orange-200 to-amber-200 flex items-center justify-center relative overflow-hidden">
+          <div className="h-64 bg-gradient-to-br from-orange-200 to-amber-200 flex items-center justify-center relative overflow-hidden">
             {hasPhotos && !imageError ? (
               <>
                 <img
                   src={currentPhoto}
                   alt={`${dog.Name} - Photo ${currentImageIndex + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain bg-white"
                   onError={() => setImageError(true)}
                 />
                 {/* Image navigation buttons */}
