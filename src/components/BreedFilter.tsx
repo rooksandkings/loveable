@@ -37,7 +37,7 @@ const BreedFilter: React.FC<BreedFilterProps> = ({ breeds, selectedBreed, onBree
         <SelectValue placeholder="Filter by breed..." />
       </SelectTrigger>
       <SelectContent className="max-h-60 overflow-y-auto">
-        <SelectItem value="">All Breeds ({breeds.length})</SelectItem>
+        <SelectItem value="all">All Breeds ({breeds.length})</SelectItem>
         {breeds.map((breed) => (
           <SelectItem key={breed} value={breed}>
             {getBreedDisplayName(breed)}

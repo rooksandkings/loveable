@@ -49,7 +49,7 @@ const fetchDogs = async (): Promise<Dog[]> => {
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedBreed, setSelectedBreed] = useState('');
+  const [selectedBreed, setSelectedBreed] = useState('all');
   const [sortBy, setSortBy] = useState('name');
   const [favorites, setFavorites] = useState<number[]>([]);
 
@@ -96,7 +96,7 @@ const Index = () => {
       const matchesSearch = dog.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            dog["Breed AI"].toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesBreed = !selectedBreed || 
+      const matchesBreed = selectedBreed === 'all' || 
                           normalizeBreed(dog["Breed_AI_1"]) === selectedBreed ||
                           normalizeBreed(dog["Breed_AI_2"]) === selectedBreed ||
                           normalizeBreed(dog["Breed_AI_3"]) === selectedBreed;
