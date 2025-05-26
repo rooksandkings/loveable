@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -11,12 +10,12 @@ const FosterFilter: React.FC<FosterFilterProps> = ({ selectedFosterStatus, onFos
   return (
     <Select value={selectedFosterStatus} onValueChange={onFosterStatusChange}>
       <SelectTrigger className="border-orange-200">
-        <SelectValue placeholder="Foster status..." />
+        <SelectValue placeholder="Foster Status" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="not-foster">Not in Foster</SelectItem>
         <SelectItem value="all">All Dogs</SelectItem>
-        <SelectItem value="foster">In Foster Only</SelectItem>
+        <SelectItem value="foster">In Foster</SelectItem>
+        <SelectItem value="not-foster">In Shelter</SelectItem>
       </SelectContent>
     </Select>
   );

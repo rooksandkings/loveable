@@ -158,22 +158,20 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-orange-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              🐕 Find Your Perfect Companion
-            </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Discover loving dogs waiting for their forever homes. Every adoption saves a life and makes room for another rescue.
-            </p>
-          </div>
+      {/* Hero Section */}
+      <section className="relative py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+            🐕 Find Your Perfect Companion
+          </h1>
+          <p className="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
+            Discover loving dogs waiting for their forever homes. Every adoption saves a life and makes room for another rescue.
+          </p>
         </div>
-      </header>
+      </section>
 
-      {/* Filters */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Search and Filters */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
         <Card className="bg-white/80 backdrop-blur-sm border-orange-200">
           <CardHeader>
             <CardTitle className="text-center text-xl text-gray-800">Find Your Match</CardTitle>
@@ -242,7 +240,7 @@ const Index = () => {
         ) : (
           <>
             {viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredDogs.map((dog) => (
                   <DogCard
                     key={dog["Dog ID"]}

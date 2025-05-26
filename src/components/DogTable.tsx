@@ -1,9 +1,9 @@
-
 import React from 'react';
-import { Heart, MapPin, Calendar, Weight } from 'lucide-react';
+import { Heart, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Dog {
   "Dog ID": number;
@@ -41,122 +41,159 @@ interface DogTableProps {
 }
 
 const DogTable: React.FC<DogTableProps> = ({ dogs, favorites, onToggleFavorite }) => {
-  const getBreedDisplay = (dog: Dog) => {
-    const breeds = [dog["Breed_AI_1"], dog["Breed_AI_2"], dog["Breed_AI_3"]]
-      .filter(Boolean)
-      .slice(0, 2);
-    return breeds.join(", ") || dog["Breed AI"];
-  };
-
-  const getLevelBadgeColor = (level: number) => {
-    switch (level) {
-      case 1: return "bg-green-100 text-green-800 border-green-200";
-      case 2: return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case 3: return "bg-orange-100 text-orange-800 border-orange-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+  const getImageUrl = (photoUrl: string) => {
+    if (!photoUrl) return '/placeholder-dog.jpg';
+    // Handle Google Drive URLs
+    if (photoUrl.includes('drive.google.com')) {
+      const fileId = photoUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+      return fileId ? `https://drive.google.com/uc?id=${fileId}` : '/placeholder-dog.jpg';
     }
+    return photoUrl;
   };
 
-  const getLocationDisplay = (dog: Dog) => {
-    if (dog["Foster_status"] === "Yes") {
-      return "Foster Care";
+  const getSizeCategory = (weight: number) => {
+    if (weight < 25) return 'Small';
+    if (weight < 60) return 'Medium';
+    return 'Large';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'yes': return 'bg-green-100 text-green-800';
+      case 'no': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
-    return dog["Location_kennel"] || "At Shelter";
-  };
-
-  const getMainPhoto = (dog: Dog) => {
-    const photos = [dog["Photo_1"], dog["Photo_2"], dog["Photo_3"]]
-      .filter(photo => photo && photo.trim() && !photo.includes('[Photo') && photo !== 'N/A');
-    return photos.length > 0 ? photos[0] : null;
   };
 
   return (
-    <div className="bg-white rounded-lg border border-orange-100 overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Photo</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Breed</TableHead>
-            <TableHead>Age & Gender</TableHead>
-            <TableHead>Weight</TableHead>
-            <TableHead>Level</TableHead>
-            <TableHead>Location</TableHead>
-            <TableHead>Days in Care</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Favorite</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {dogs.map((dog) => {
-            const mainPhoto = getMainPhoto(dog);
-            const isFavorite = favorites.includes(dog["Dog ID"]);
-            
-            return (
-              <TableRow key={dog["Dog ID"]} className="hover:bg-orange-50">
-                <TableCell>
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-200 to-amber-200 rounded-lg flex items-center justify-center overflow-hidden">
-                    {mainPhoto ? (
+    <Card>
+      <CardHeader>
+        <CardTitle>Dogs Available for Adoption</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-20">Photo</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Breed</TableHead>
+                <TableHead>Age</TableHead>
+                <TableHead>Weight</TableHead>
+                <TableHead>Days in Shelter</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Foster</TableHead>
+                <TableHead>Fixed</TableHead>
+                <TableHead>Gender</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dogs.map((dog) => (
+                <TableRow key={dog["Dog ID"]} className="h-20">
+                  <TableCell>
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                       <img
-                        src={mainPhoto}
+                        src={getImageUrl(dog["Photo_1"])}
                         alt={dog.Name}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder-dog.jpg';
+                        }}
                       />
-                    ) : (
-                      <div className="text-2xl">🐕</div>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">{dog.Name}</TableCell>
-                <TableCell>{getBreedDisplay(dog)}</TableCell>
-                <TableCell>{dog["Approx_Age"]} • {dog.Gender}</TableCell>
-                <TableCell>{dog.Weight} lbs</TableCell>
-                <TableCell>
-                  <Badge className={getLevelBadgeColor(dog.Level)}>
-                    Level {dog.Level}
-                  </Badge>
-                </TableCell>
-                <TableCell>{getLocationDisplay(dog)}</TableCell>
-                <TableCell>{dog["Days_in_DCAS"]} days</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {dog["Spay_Neuter_status"] === "Yes" && (
-                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
-                        S/N
-                      </Badge>
-                    )}
-                    {dog["Foster_status"] === "Yes" && (
-                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
-                        Foster
-                      </Badge>
-                    )}
-                    {dog["Heartworm_Status"] === "Neg" && (
-                      <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
-                        HW-
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`p-2 rounded-full ${
-                      isFavorite 
-                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                    onClick={() => onToggleFavorite(dog["Dog ID"])}
-                  >
-                    <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell className="font-medium">
+                    <div>
+                      <div className="font-semibold">{dog.Name}</div>
+                      <div className="text-xs text-gray-500">ID: {dog["Dog ID"]}</div>
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>{dog["Breed AI"]}</TableCell>
+                  
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {dog["Approx_Age"] || 'Unknown'}
+                    </Badge>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <div className="text-sm">
+                      <div>{dog.Weight} lbs</div>
+                      <div className="text-xs text-gray-500">{getSizeCategory(dog.Weight)}</div>
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {dog["Days_in_DCAS"]} days
+                    </Badge>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <div className="text-sm">
+                      <div>{dog["Location_kennel"]}</div>
+                      <div className="text-xs text-gray-500">{dog["Location_room"]}</div>
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <Badge className={dog["Foster_status"] === "Yes" ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"}>
+                      {dog["Foster_status"] === "Yes" ? "Available" : "No"}
+                    </Badge>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <Badge className={getStatusColor(dog["Spay_Neuter_status"])}>
+                      {dog["Spay_Neuter_status"] === "Yes" ? "Yes" : "No"}
+                    </Badge>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">
+                      {dog.Gender || 'Unknown'}
+                    </Badge>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-8 w-8 p-0 ${
+                          favorites.includes(dog["Dog ID"]) ? 'text-red-600' : 'text-gray-400'
+                        }`}
+                        onClick={() => onToggleFavorite(dog["Dog ID"])}
+                      >
+                        <Heart className={`h-4 w-4 ${favorites.includes(dog["Dog ID"]) ? 'fill-current' : ''}`} />
+                      </Button>
+                      {dog["Photo_1"] && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => window.open(getImageUrl(dog["Photo_1"]), '_blank')}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        
+        {dogs.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No dogs match your current filters.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
