@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, MapPin, Calendar, Weight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, MapPin, Calendar, Weight, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,7 @@ interface Dog {
   "Foster_status": string;
   "Heartworm_Status": string;
   "Sociability_notes": string;
+  "Adopets_url": string;
 }
 
 interface DogCardProps {
@@ -211,8 +212,8 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-white border-orange-200">
-      <div className="relative h-64 bg-gray-200 overflow-hidden rounded-t-lg">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-200">
+      <div className="relative h-64 bg-gradient-to-br from-orange-100 to-yellow-100 overflow-hidden rounded-t-lg">
         <img
           src={getImageUrl(availablePhotos[currentImageIndex] || dog["Photo_1"])}
           alt={dog.Name}
@@ -227,13 +228,13 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
           <>
             <button
               onClick={prevImage}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-1 rounded-full hover:bg-white transition-colors duration-200"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm p-1 rounded-full hover:bg-white transition-colors duration-200 shadow-sm"
             >
               <ChevronLeft className="h-4 w-4 text-gray-700" />
             </button>
             <button
               onClick={nextImage}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-1 rounded-full hover:bg-white transition-colors duration-200"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm p-1 rounded-full hover:bg-white transition-colors duration-200 shadow-sm"
             >
               <ChevronRight className="h-4 w-4 text-gray-700" />
             </button>
@@ -248,7 +249,7 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
                 className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                  index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                  index === currentImageIndex ? 'bg-white shadow-sm' : 'bg-white/60'
                 }`}
               />
             ))}
@@ -257,7 +258,7 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
 
         {/* Level badge in top right */}
         <div className="absolute top-2 right-2">
-          <Badge variant="outline" className={`${getLevelColor(dog.Level)} backdrop-blur-sm`}>
+          <Badge variant="outline" className={`${getLevelColor(dog.Level)} backdrop-blur-sm shadow-sm`}>
             Level {dog.Level}
           </Badge>
         </div>
@@ -323,6 +324,26 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
             </Badge>
           )}
         </div>
+
+        {/* Adoption button */}
+        {dog.Adopets_url && (
+          <div className="mt-4 pt-3 border-t border-orange-100">
+            <Button 
+              asChild 
+              className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-medium shadow-sm"
+            >
+              <a 
+                href={dog.Adopets_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2"
+              >
+                <span>View Adoption Details</span>
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
