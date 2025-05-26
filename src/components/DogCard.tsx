@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, MapPin, Calendar, Weight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -36,34 +36,121 @@ interface Dog {
 interface DogCardProps {
   dog: Dog;
   isFavorite: boolean;
-  onToggleFavorite: () => void;
+  onToggleFavorite: (dogId: number) => void;
 }
 
 const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const getImageUrl = (photoUrl: string) => {
-    if (!photoUrl) return '/placeholder-dog.jpg';
-    // Handle Google Drive URLs
-    if (photoUrl.includes('drive.google.com')) {
-      const fileId = photoUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
-      return fileId ? `https://drive.google.com/uc?id=${fileId}` : '/placeholder-dog.jpg';
+    if (!photoUrl || photoUrl.trim() === '' || photoUrl === 'N/A') {
+      return 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
     }
-    return photoUrl;
+    
+    // Clean up the URL (remove any trailing newlines or whitespace)
+    const cleanUrl = photoUrl.trim();
+    
+    // Petango URLs should work directly
+    if (cleanUrl.includes('petango.com')) {
+      return cleanUrl;
+    }
+    
+    // Handle Google Drive URLs (if any)
+    if (cleanUrl.includes('drive.google.com')) {
+      const fileId = cleanUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+      return fileId ? `https://drive.google.com/uc?id=${fileId}` : 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
+    }
+    
+    return cleanUrl;
   };
 
-  // Get all available photos for this dog
-  const availablePhotos = [
-    dog["Photo_1"],
-    dog["Photo_2"], 
-    dog["Photo_3"]
-  ].filter(photo => photo && photo.trim() !== '');
+  // Helper functions
+  const getLevelColor = (level: number) => {
+    switch (level) {
+      case 1:
+        return "bg-green-100 text-green-800 border-green-200";
+      case 2:
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case 3:
+        return "bg-red-100 text-red-800 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getBreedDisplay = (dog: Dog) => {
+    return dog["Breed AI"] || 'Mixed Breed';
+  };
+
+  const getAgeDisplay = (dog: Dog) => {
+    return dog.Approx_Age || 'Unknown';
+  };
 
   const getSizeCategory = (weight: number) => {
-    if (weight < 25) return 'Small';
-    if (weight < 60) return 'Medium';
+    if (weight <= 25) return 'Small';
+    if (weight <= 60) return 'Medium';
     return 'Large';
   };
+
+  const getLocationDisplay = (dog: Dog) => {
+    if (dog.Location_kennel === 'Foster Care') {
+      return 'Foster Care';
+    }
+    return `${dog.Location_kennel || 'Unknown'} - ${dog.Location_room || 'Unknown'}`;
+  };
+
+  const getSpayNeuterText = (status: string, gender: string) => {
+    if (status === "Yes") {
+      return gender?.toLowerCase() === 'female' ? 'Spayed' : 'Neutered';
+    } else {
+      return gender?.toLowerCase() === 'female' ? 'Not Spayed' : 'Not Neutered';
+    }
+  };
+
+  const getSpayNeuterColor = (status: string) => {
+    return status === "Yes" 
+      ? "bg-green-100 text-green-800 border-green-200"
+      : "bg-yellow-100 text-yellow-800 border-yellow-200";
+  };
+
+  const getHeartwormColor = (status: string) => {
+    return status === "Neg" 
+      ? "bg-green-50 text-green-700 border-green-200"
+      : "bg-red-50 text-red-700 border-red-200";
+  };
+
+  const getGenderIcon = (gender: string) => {
+    if (gender?.toLowerCase() === 'male') {
+      return (
+        <div className="flex items-center gap-1 text-blue-600">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.5 7.5V5h3v3h-2.5v2.5c0 2.76-2.24 5-5 5s-5-2.24-5-5 2.24-5 5-5c1.38 0 2.63.56 3.54 1.46L16 5.5h2.5V3H21v5h-5v-2.5h1.5l-1.46 1.46C15.44 6.37 14.38 6 13 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6V7.5h-3.5z"/>
+          </svg>
+          <span className="text-xs font-medium">Male</span>
+        </div>
+      );
+    } else if (gender?.toLowerCase() === 'female') {
+      return (
+        <div className="flex items-center gap-1 text-pink-600">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2c3.31 0 6 2.69 6 6 0 2.97-2.16 5.43-5 5.91V16h2v2h-2v2h-2v-2H9v-2h2v-2.09c-2.84-.48-5-2.94-5-5.91 0-3.31 2.69-6 6-6zm0 2c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
+          </svg>
+          <span className="text-xs font-medium">Female</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-1 text-gray-500">
+        <span className="text-xs">Unknown</span>
+      </div>
+    );
+  };
+
+  // Get available photos
+  const availablePhotos = [dog["Photo_1"], dog["Photo_2"], dog["Photo_3"]]
+    .filter(photo => photo && photo.trim() !== '' && photo !== 'N/A');
+  
+  const hasMultiplePhotos = availablePhotos.length > 1;
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -74,14 +161,16 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
   };
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % availablePhotos.length);
+    if (hasMultiplePhotos) {
+      setCurrentImageIndex((prev) => (prev + 1) % availablePhotos.length);
+    }
   };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + availablePhotos.length) % availablePhotos.length);
+    if (hasMultiplePhotos) {
+      setCurrentImageIndex((prev) => (prev - 1 + availablePhotos.length) % availablePhotos.length);
+    }
   };
-
-  const currentPhoto = availablePhotos[currentImageIndex] || dog["Photo_1"];
 
   // Function to format sociability information
   const formatSociabilityInfo = () => {
@@ -121,140 +210,115 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
     return null;
   };
 
-  // Function to get gender-specific spay/neuter text
-  const getSpayNeuterText = () => {
-    if (dog["Spay_Neuter_status"] !== "Yes") {
-      return "Not Fixed";
-    }
-    
-    const gender = dog.Gender?.toLowerCase();
-    if (gender === "male") {
-      return "Neutered";
-    } else if (gender === "female") {
-      return "Spayed";
-    } else {
-      return "Spayed/Neutered"; // fallback if gender is unknown
-    }
-  };
-
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-white border-orange-200">
-      <div className="relative group">
+      <div className="relative h-64 bg-gray-200 overflow-hidden rounded-t-lg">
         <img
-          src={getImageUrl(currentPhoto)}
-          alt={`${dog.Name} - Photo ${currentImageIndex + 1}`}
-          className="w-full h-64 sm:h-72 object-cover object-top sm:object-contain bg-gray-50"
+          src={getImageUrl(availablePhotos[currentImageIndex] || dog["Photo_1"])}
+          alt={dog.Name}
+          className="w-full h-full object-contain"
           onError={(e) => {
-            e.currentTarget.src = '/placeholder-dog.jpg';
+            e.currentTarget.src = 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
           }}
         />
-        
-        {/* Image Navigation Arrows - positioned at edges */}
-        {availablePhotos.length > 1 && (
+
+        {/* Navigation arrows */}
+        {hasMultiplePhotos && (
           <>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute left-1 top-1/2 transform -translate-y-1/2 p-1 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            <button
               onClick={prevImage}
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-1 rounded-full hover:bg-white transition-colors duration-200"
             >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 p-1 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              <ChevronLeft className="h-4 w-4 text-gray-700" />
+            </button>
+            <button
               onClick={nextImage}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-1 rounded-full hover:bg-white transition-colors duration-200"
             >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            
-            {/* Image indicators */}
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
-              {availablePhotos.map((_, index) => (
-                <button
-                  key={index}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                  }`}
-                  onClick={() => setCurrentImageIndex(index)}
-                />
-              ))}
-            </div>
+              <ChevronRight className="h-4 w-4 text-gray-700" />
+            </button>
           </>
         )}
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className={`absolute top-2 right-2 p-2 rounded-full ${
-            isFavorite ? 'bg-red-100 text-red-600' : 'bg-white/80 text-gray-600'
-          }`}
-          onClick={onToggleFavorite}
-        >
-          <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
-        </Button>
-        
-        {dog["Foster_status"] === "Yes" && (
-          <Badge className="absolute top-2 left-2 bg-blue-500 text-white">
-            In Foster
-          </Badge>
+        {/* Photo indicators */}
+        {hasMultiplePhotos && (
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+            {availablePhotos.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                  index === currentImageIndex ? 'bg-white' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
         )}
+
+        {/* Level badge in top right */}
+        <div className="absolute top-2 right-2">
+          <Badge variant="outline" className={`${getLevelColor(dog.Level)} backdrop-blur-sm`}>
+            Level {dog.Level}
+          </Badge>
+        </div>
       </div>
-      
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-gray-900">{dog.Name}</h3>
-            {dog.Gender && (
-              <Badge variant="outline" className="text-xs">
-                {dog.Gender}
-              </Badge>
-            )}
-          </div>
-          <Badge variant="outline" className="text-xs">
-            ID: {dog["Dog ID"]}
-          </Badge>
-        </div>
-        
-        <p className="text-sm text-gray-600 mb-3">{dog["Breed AI"]}</p>
-        
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <Weight className="h-4 w-4 text-gray-400" />
-            <span>{dog.Weight} lbs • {getSizeCategory(dog.Weight)}</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-gray-400" />
-            <span>{dog["Days_in_DCAS"]} days in shelter</span>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-gray-400" />
-            <span>{dog["Location_kennel"]} - {dog["Location_room"]}</span>
-          </div>
-        </div>
-        
-        <div className="flex flex-wrap gap-1 mt-3">
-          <Badge className={getStatusColor(dog["Spay_Neuter_status"])}>
-            {getSpayNeuterText()}
-          </Badge>
-          
-          {dog["Approx_Age"] && (
-            <Badge variant="outline" className="text-xs">
-              {dog["Approx_Age"]}
+
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-bold text-gray-900">{dog.Name}</span>
+            {getGenderIcon(dog.Gender)}
+            <Badge variant="outline" className="text-xs bg-gray-50">
+              ID: {dog["Dog ID"]}
             </Badge>
-          )}
+          </div>
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Breed */}
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-1">Breed</p>
+          <p className="text-sm text-gray-600">{getBreedDisplay(dog)}</p>
+        </div>
+
+        {/* Age, Weight, Days */}
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="flex items-center gap-2 text-gray-600">
+            <Calendar className="h-4 w-4 text-orange-500" />
+            <span>{getAgeDisplay(dog)}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-600">
+            <Weight className="h-4 w-4 text-orange-500" />
+            <span>{dog.Weight}lbs • {getSizeCategory(dog.Weight)}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Calendar className="h-4 w-4 text-orange-500" />
+          <span>{dog["Days_in_DCAS"]} days in shelter</span>
+        </div>
+
+        {/* Location */}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <MapPin className="h-4 w-4 text-orange-500" />
+          <span>{getLocationDisplay(dog)}</span>
+        </div>
+
+        {/* Status badges */}
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className={getSpayNeuterColor(dog["Spay_Neuter_status"])}>
+            {getSpayNeuterText(dog["Spay_Neuter_status"], dog.Gender)}
+          </Badge>
           
           {dog["Sociability_status"] && (
-            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700">
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
               {dog["Sociability_status"]}
             </Badge>
           )}
           
           {dog["Sociablity_playstyle"] && (
-            <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
+            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
               {dog["Sociablity_playstyle"]}
             </Badge>
           )}
