@@ -121,30 +121,12 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
   };
 
   const getGenderIcon = (gender: string) => {
-    if (gender?.toLowerCase() === 'male') {
-      return (
-        <div className="flex items-center gap-1 text-blue-600">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M15.5 7.5V5h3v3h-2.5v2.5c0 2.76-2.24 5-5 5s-5-2.24-5-5 2.24-5 5-5c1.38 0 2.63.56 3.54 1.46L16 5.5h2.5V3H21v5h-5v-2.5h1.5l-1.46 1.46C15.44 6.37 14.38 6 13 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6V7.5h-3.5z"/>
-          </svg>
-          <span className="text-xs font-medium">Male</span>
-        </div>
-      );
-    } else if (gender?.toLowerCase() === 'female') {
-      return (
-        <div className="flex items-center gap-1 text-pink-600">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2c3.31 0 6 2.69 6 6 0 2.97-2.16 5.43-5 5.91V16h2v2h-2v2h-2v-2H9v-2h2v-2.09c-2.84-.48-5-2.94-5-5.91 0-3.31 2.69-6 6-6zm0 2c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>
-          </svg>
-          <span className="text-xs font-medium">Female</span>
-        </div>
-      );
+    if (gender.toLowerCase() === 'male') {
+      return <span className="text-blue-500 text-lg">♂</span>;
+    } else if (gender.toLowerCase() === 'female') {
+      return <span className="text-pink-500 text-lg">♀</span>;
     }
-    return (
-      <div className="flex items-center gap-1 text-gray-500">
-        <span className="text-xs">Unknown</span>
-      </div>
-    );
+    return null;
   };
 
   // Get available photos
@@ -264,19 +246,17 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
         </div>
       </div>
 
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-xl font-bold text-gray-900">{dog.Name}</span>
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex items-center gap-2">
+            <h3 className="text-xl font-semibold text-gray-800">{dog.Name}</h3>
             {getGenderIcon(dog.Gender)}
-            <Badge variant="outline" className="text-xs bg-gray-50">
-              ID: {dog["Dog ID"]}
-            </Badge>
           </div>
-        </CardTitle>
-      </CardHeader>
+          <Badge variant="outline" className="bg-white/80 text-gray-600 border-gray-300">
+            ID: {dog["Dog ID"]}
+          </Badge>
+        </div>
 
-      <CardContent className="space-y-4">
         {/* Breed */}
         <div>
           <p className="text-sm font-medium text-gray-700 mb-1">Breed</p>
