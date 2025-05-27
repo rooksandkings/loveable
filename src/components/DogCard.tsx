@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dog as DogType } from '@/types/Dog';
+import { formatLocation } from '@/utils/dogUtils';
 
 interface Dog {
   "Dog ID": number;
@@ -36,6 +37,7 @@ interface Dog {
   "Days_in_Shelter": number;
   "Fixed": string;
   "Rabies_vax_date": string;
+  "DFTD_eligibility": string;
 }
 
 interface DogCardProps {
@@ -95,13 +97,6 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
     if (weight <= 25) return 'Small';
     if (weight <= 60) return 'Medium';
     return 'Large';
-  };
-
-  const getLocationDisplay = (dog: Dog) => {
-    if (dog.Location_kennel === 'Foster Care') {
-      return 'Foster Care';
-    }
-    return `${dog.Location_kennel || 'Unknown'} - ${dog.Location_room || 'Unknown'}`;
   };
 
   const getSpayNeuterText = (status: string, gender: string) => {
@@ -197,106 +192,8 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
     return null;
   };
 
-  const formatLocation = (kennel: string, room: string) => {
-    if (kennel === "Foster Care") {
-      return "In Foster";
-    }
-    
-    // Handle ISO Dogs pattern: ISO16 • ISO Dogs -> ISO Dogs 16
-    if (kennel && kennel.startsWith("ISO") && room === "ISO Dogs") {
-      const number = kennel.replace("ISO", "");
-      return `ISO Dogs ${number}`;
-    }
-    
-    // Handle ISO Puppies pattern: IsoP16 • ISO Puppies -> ISO Puppies 16
-    if (kennel && kennel.startsWith("IsoP") && room === "ISO Puppies") {
-      const number = kennel.replace("IsoP", "");
-      return `ISO Puppies ${number}`;
-    }
-    
-    // Handle Cat Hold pattern: Cat Holding (79) 06 • Cat Hold(79) -> Cat Holdings (79) - 06
-    if (kennel && kennel.includes("Cat Holding") && room && room.includes("Cat Hold")) {
-      const match = kennel.match(/Cat Holding \((\d+)\) (\d+)/);
-      if (match) {
-        const [, number1, number2] = match;
-        return `Cat Holdings (${number1}) - ${number2}`;
-      }
-    }
-    
-    // Handle Adopt Puppies pattern: P09 • Adopt Puppies -> Adoption Puppies 09
-    if (kennel && kennel.startsWith("P") && room === "Adopt Puppies") {
-      const number = kennel.replace("P", "");
-      return `Adoption Puppies ${number}`;
-    }
-    
-    // Handle Dog Hold pattern: Hold15 • Dog Hold -> Dog Holding 15
-    if (kennel && kennel.startsWith("Hold") && room === "Dog Hold") {
-      const number = kennel.replace("Hold", "");
-      return `Dog Holding ${number}`;
-    }
-    
-    // Handle Bonding Rooms pattern: Bonding Rooms A1C -> Bonding Rooms A1 - C
-    if (kennel && kennel.startsWith("Bonding Rooms") && (room === "Bonding Rooms" || !room)) {
-      const match = kennel.match(/Bonding Rooms ([A-Z]\d+)([A-Z])/);
-      if (match) {
-        const [, roomNumber, section] = match;
-        return `Bonding Rooms ${roomNumber} - ${section}`;
-      }
-      return kennel; // fallback if pattern doesn't match
-    }
-    
-    // Handle Hall Crate pattern: extract the specific crate info
-    if (kennel && kennel.includes("Hall Crate")) {
-      // Handle both "Hall Crate Hall Crate 34-B" and "Hall Crate Hall Crate 32- B • Hall Crate"
-      if (room === "Hall Crate" || !room) {
-        // Remove duplicate "Hall Crate" and extract the crate number
-        let cleaned = kennel.replace(/^Hall Crate\s+Hall Crate\s+/, "Hall Crate ");
-        // Add spaces around dashes: 34-B -> 34 - B
-        cleaned = cleaned.replace(/(\d+)-([A-Z])/g, '$1 - $2');
-        return cleaned;
-      }
-    }
-    
-    // Handle "Adopt Dogs" ranges - extract just the kennel number
-    if (room && room.includes("Adopt Dogs")) {
-      // If kennel matches the pattern (like A09, B28, C39), just show the kennel
-      if (kennel && kennel.match(/^[A-Z]\d+/)) {
-        // Format as C - 39 instead of C39
-        const formatted = kennel.replace(/^([A-Z])(\d+)/, '$1 - $2');
-        return formatted;
-      }
-    }
-    
-    // Default behavior for other locations
-    if (room && room !== kennel) {
-      return `${kennel} • ${room}`;
-    }
-    
-    return kennel;
-  };
-
-  const isDFTDEligible = (dog: Dog) => {
-    const level1 = dog.Level === 1;
-    const notFoster = dog.Location_kennel !== "Foster Care";
-    // Check the actual field name from your data
-    const fixed = dog["Spay_Neuter_status"] === "Yes";
-    const hasRabies = dog.Rabies_vax_date && dog.Rabies_vax_date.trim() !== "" && dog.Rabies_vax_date !== "N/A";
-    
-    const eligible = level1 && notFoster && fixed && hasRabies;
-    
-    // Debug log to see what's happening
-    console.log('DFTD check for', dog.Name, {
-      level1,
-      notFoster,
-      fixed,
-      spayNeuterStatus: dog["Spay_Neuter_status"],
-      hasRabies,
-      rabiesDate: dog.Rabies_vax_date,
-      eligible
-    });
-    
-    return eligible;
-  };
+  // Replace the calculated DFTD eligibility with API field
+  const dftdEligible = dog.DFTD_eligibility === "Yes";
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-200 flex flex-col h-full">
@@ -446,7 +343,7 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
 
         {/* DFTD and Size badges */}
         <div className="flex flex-wrap gap-2 mb-3">
-          {isDFTDEligible(dog) && (
+          {dftdEligible && (
             <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-medium">
               <Star className="h-3 w-3 mr-1" />
               DFTD Eligible

@@ -1,14 +1,22 @@
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Sort by..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">Name</SelectItem>
-              <SelectItem value="age">Age</SelectItem>
-              <SelectItem value="size">Size</SelectItem>
-              <SelectItem value="level">Level</SelectItem>
-            </SelectContent>
-          </Select> 
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="pl-10 pr-4 py-3 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white text-gray-700 min-w-[140px] appearance-none"
+            >
+              <option value="name">Name</option>
+              <option value="age">Age</option>
+              <option value="size">Size</option>
+              <option value="level">Level</option>
+              <option value="weight">Weight</option>
+              <option value="dftdEligible">DFTD Eligible</option>
+            </select>
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+              </svg>
+            </div>
+          </div> 
 
 const parseAge = (ageString: string) => {
   if (!ageString) return 0;

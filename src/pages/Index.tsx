@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Heart, MapPin, Calendar, Weight, Grid, List, Filter } from 'lucide-react';
+import { Search, Heart, MapPin, Calendar, Weight, Grid, List, Filter, ArrowUpDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import DogList from '@/components/DogList';
 import BreedFilter from '@/components/BreedFilter';
 import FosterFilter from '@/components/FosterFilter';
+import { parseAge } from '@/utils/dogUtils';
 
 interface Dog {
   "Dog ID": number;
@@ -40,6 +41,8 @@ interface Dog {
   "Sociability_notes": string;
   "Adopets_url": string;
 }
+
+type SortOption = 'name' | 'age' | 'size' | 'level' | 'weight' | 'dftdEligible';
 
 const RunningDog = () => (
   <div className="relative">
@@ -270,6 +273,43 @@ const Index = () => {
     });
   }, [dogs, searchTerm, selectedBreed, fosterStatus]);
 
+  const sortedDogs = useMemo(() => {
+    const sorted = [...filteredDogs];
+    
+    switch (sortBy) {
+      case 'name':
+        sorted.sort((a, b) => a.Name.localeCompare(b.Name));
+        break;
+      case 'age':
+        sorted.sort((a, b) => {
+          const ageA = parseAge(a.Approx_Age);
+          const ageB = parseAge(b.Approx_Age);
+          return ageA - ageB;
+        });
+        break;
+      case 'size':
+        sorted.sort((a, b) => parseFloat(a.Weight || '0') - parseFloat(b.Weight || '0'));
+        break;
+      case 'level':
+        sorted.sort((a, b) => parseInt(a.Level || '0') - parseInt(b.Level || '0'));
+        break;
+      case 'weight':
+        sorted.sort((a, b) => parseFloat(a.Weight || '0') - parseFloat(b.Weight || '0'));
+        break;
+      case 'dftdEligible':
+        sorted.sort((a, b) => {
+          const aEligible = a.DFTD_eligibility === "Yes" ? 1 : 0;
+          const bEligible = b.DFTD_eligibility === "Yes" ? 1 : 0;
+          return bEligible - aEligible; // DFTD eligible dogs first
+        });
+        break;
+      default:
+        break;
+    }
+    
+    return sorted;
+  }, [filteredDogs, sortBy]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
@@ -366,9 +406,9 @@ const Index = () => {
                   </SelectContent>
                 </Select>
 
-                <Select value={sortBy} onValueChange={setSortBy}>
+                <Select value={sortBy} onValueChange={(value: SortOption) => setSortBy(value)}>
                   <SelectTrigger className="h-12 w-40 border-orange-200 focus:border-orange-400 focus:ring-orange-400 rounded-xl">
-                    <Filter className="h-4 w-4 mr-2" />
+                    <ArrowUpDown className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -377,7 +417,7 @@ const Index = () => {
                     <SelectItem value="size">Size</SelectItem>
                     <SelectItem value="level">Level</SelectItem>
                     <SelectItem value="weight">Weight</SelectItem>
-                    <SelectItem value="days">Days in Shelter</SelectItem>
+                    <SelectItem value="dftdEligible">DFTD Eligible</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -407,7 +447,7 @@ const Index = () => {
       <section className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <DogList
-            dogs={filteredDogs}
+            dogs={sortedDogs}
             favorites={favorites}
             onToggleFavorite={toggleFavorite}
             viewMode={viewMode}
