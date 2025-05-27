@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import DogCard from '@/components/DogCard';
-import DogTable from '@/components/DogTable';
+import DogList from '@/components/DogList';
 import BreedFilter from '@/components/BreedFilter';
 import FosterFilter from '@/components/FosterFilter';
 
@@ -39,6 +38,7 @@ interface Dog {
   "Foster_status": string;
   "Heartworm_Status": string;
   "Sociability_notes": string;
+  "Adopets_url": string;
 }
 
 const RunningDog = () => (
@@ -95,7 +95,20 @@ const Index = () => {
   const [selectedBreed, setSelectedBreed] = useState('all');
   const [fosterStatus, setFosterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('name');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState('cards');
+  const [favorites, setFavorites] = useState<Set<number>>(new Set());
+
+  const toggleFavorite = (dogId: number) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(dogId)) {
+        newFavorites.delete(dogId);
+      } else {
+        newFavorites.add(dogId);
+      }
+      return newFavorites;
+    });
+  };
 
   const { data: dogs = [], isLoading, error } = useQuery({
     queryKey: ['dogs'],
@@ -124,6 +137,14 @@ const Index = () => {
           }));
         
         console.log('Cleaned data:', cleanedData.slice(0, 3));
+
+        // Add this temporarily to debug
+        console.log('Dog Level data:', cleanedData.slice(0, 5).map(dog => ({ 
+          name: dog.Name, 
+          level: dog.Level, 
+          levelType: typeof dog.Level 
+        })));
+
         return cleanedData;
       } catch (error) {
         console.error('Fetch error:', error);
@@ -132,65 +153,122 @@ const Index = () => {
     },
   });
 
-  // Get unique breeds for filter
+  // Function to consolidate similar breeds
+  const consolidateBreed = (breedString: string): string => {
+    if (!breedString || breedString.trim() === '') return 'Mixed Breed';
+    
+    const breed = breedString.toLowerCase();
+    
+    // Pit Bull variations
+    if (breed.includes('pit bull') || breed.includes('pitbull') || 
+        breed.includes('american pit bull') || breed.includes('staffordshire')) {
+      return 'Pit Bull / Staffordshire';
+    }
+    
+    // Boxer variations
+    if (breed.includes('boxer')) {
+      return 'Boxer';
+    }
+    
+    // Labrador variations
+    if (breed.includes('labrador') || breed.includes('lab mix')) {
+      return 'Labrador Retriever';
+    }
+    
+    // German Shepherd variations
+    if (breed.includes('german shepherd')) {
+      return 'German Shepherd';
+    }
+    
+    // Husky variations
+    if (breed.includes('husky') || breed.includes('alaskan malamute')) {
+      return 'Husky / Northern Breed';
+    }
+    
+    // Bulldog variations
+    if (breed.includes('bulldog') || breed.includes('american bulldog') || 
+        breed.includes('french bulldog') || breed.includes('english bulldog')) {
+      return 'Bulldog';
+    }
+    
+    // Belgian Malinois variations
+    if (breed.includes('belgian malinois') || breed.includes('belgian shepherd')) {
+      return 'Belgian Malinois';
+    }
+    
+    // Rottweiler variations
+    if (breed.includes('rottweiler')) {
+      return 'Rottweiler';
+    }
+    
+    // Cane Corso variations
+    if (breed.includes('cane corso')) {
+      return 'Cane Corso';
+    }
+    
+    // Border Collie variations
+    if (breed.includes('border collie')) {
+      return 'Border Collie';
+    }
+    
+    // Chihuahua variations
+    if (breed.includes('chihuahua')) {
+      return 'Chihuahua';
+    }
+    
+    // Great Dane variations
+    if (breed.includes('great dane')) {
+      return 'Great Dane';
+    }
+    
+    // Terrier variations (excluding pit bull terrier which is handled above)
+    if (breed.includes('terrier') && !breed.includes('pit bull') && !breed.includes('staffordshire')) {
+      return 'Terrier';
+    }
+    
+    // Retriever variations (excluding Labrador which is handled above)
+    if (breed.includes('retriever') && !breed.includes('labrador')) {
+      return 'Retriever';
+    }
+    
+    // Shepherd variations (excluding German Shepherd which is handled above)
+    if (breed.includes('shepherd') && !breed.includes('german')) {
+      return 'Shepherd';
+    }
+    
+    // Mixed Breed variations
+    if (breed.includes('mixed breed') || breed.includes('mix')) {
+      return 'Mixed Breed';
+    }
+    
+    // If no consolidation matches, return the first breed mentioned
+    const firstBreed = breedString.split(',')[0].trim();
+    return firstBreed || 'Mixed Breed';
+  };
+
+  // Get unique consolidated breeds for the dropdown
   const uniqueBreeds = useMemo(() => {
-    const breeds = new Set<string>();
-    dogs.forEach(dog => {
-      if (dog["Breed AI"]) {
-        breeds.add(dog["Breed AI"]);
-      }
-    });
-    return Array.from(breeds).sort();
+    const breeds = dogs.map(dog => consolidateBreed(dog["Breed AI"]));
+    return [...new Set(breeds)].sort();
   }, [dogs]);
 
-  // Filter and sort dogs
+  // Updated filtering logic
   const filteredDogs = useMemo(() => {
-    let filtered = dogs.filter(dog => {
-      const matchesSearch = !searchTerm || 
-        dog.Name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        dog["Breed AI"]?.toLowerCase().includes(searchTerm.toLowerCase());
+    return dogs.filter(dog => {
+      const matchesSearch = searchTerm === '' || 
+        dog.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        consolidateBreed(dog["Breed AI"]).toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesBreed = selectedBreed === 'all' || dog["Breed AI"] === selectedBreed;
+      const matchesBreed = selectedBreed === 'all' || 
+        consolidateBreed(dog["Breed AI"]) === selectedBreed;
       
       const matchesFoster = fosterStatus === 'all' || 
-        (fosterStatus === 'yes' && dog["Foster_status"] === 'Yes') ||
-        (fosterStatus === 'no' && dog["Foster_status"] !== 'Yes');
+        (fosterStatus === 'yes' && dog.Location_kennel === 'Foster Care') ||
+        (fosterStatus === 'no' && dog.Location_kennel !== 'Foster Care');
       
       return matchesSearch && matchesBreed && matchesFoster;
     });
-
-    // Fixed sorting with proper error handling
-    filtered.sort((a, b) => {
-      try {
-        switch (sortBy) {
-          case 'size':
-            const getSizeOrder = (weight: number | undefined) => {
-              const w = weight || 0;
-              if (w <= 25) return 1; // Small
-              if (w <= 60) return 2; // Medium  
-              return 3; // Large
-            };
-            const sizeA = getSizeOrder(a.Weight);
-            const sizeB = getSizeOrder(b.Weight);
-            return sizeA - sizeB;
-          case 'weight':
-            return (a.Weight || 0) - (b.Weight || 0);
-          case 'days':
-            return (b["Days_in_DCAS"] || 0) - (a["Days_in_DCAS"] || 0);
-          case 'age':
-            return (a["Approx_Age"] || '').localeCompare(b["Approx_Age"] || '');
-          case 'name':
-          default:
-            return (a.Name || '').localeCompare(b.Name || '');
-        }
-      } catch (error) {
-        console.error('Sorting error:', error);
-        return 0;
-      }
-    });
-
-    return filtered;
-  }, [dogs, searchTerm, selectedBreed, fosterStatus, sortBy]);
+  }, [dogs, searchTerm, selectedBreed, fosterStatus]);
 
   if (isLoading) {
     return (
@@ -250,21 +328,21 @@ const Index = () => {
           </p>
 
           {/* Simple Search Bar */}
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-orange-100 max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-orange-100 max-w-5xl mx-auto">
             <div className="flex flex-col md:flex-row gap-4">
               {/* Search Input */}
-              <div className="relative flex-1">
+              <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
                   placeholder="Search by name or breed..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-12 border-orange-200 focus:border-orange-400 focus:ring-orange-400 rounded-xl"
+                  className="pl-10 h-12 border-orange-200 focus:border-orange-400 focus:ring-orange-400 rounded-xl text-base"
                 />
               </div>
 
-              {/* Filter Dropdowns */}
-              <div className="flex gap-2">
+              {/* Filter Dropdowns and View Toggle */}
+              <div className="flex gap-2 flex-shrink-0">
                 <Select value={selectedBreed} onValueChange={setSelectedBreed}>
                   <SelectTrigger className="h-12 w-48 border-orange-200 focus:border-orange-400 focus:ring-orange-400 rounded-xl">
                     <SelectValue placeholder="All Breeds" />
@@ -297,27 +375,29 @@ const Index = () => {
                     <SelectItem value="name">Name</SelectItem>
                     <SelectItem value="age">Age</SelectItem>
                     <SelectItem value="size">Size</SelectItem>
+                    <SelectItem value="level">Level</SelectItem>
                     <SelectItem value="weight">Weight</SelectItem>
                     <SelectItem value="days">Days in Shelter</SelectItem>
                   </SelectContent>
                 </Select>
+
+                {/* View Toggle */}
+                <ToggleGroup type="single" value={viewMode} onValueChange={setViewMode} className="bg-gray-100 rounded-xl p-1 h-12">
+                  <ToggleGroupItem value="cards" className="data-[state=on]:bg-white data-[state=on]:shadow-sm h-10 px-3">
+                    <Grid className="h-4 w-4" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="table" className="data-[state=on]:bg-white data-[state=on]:shadow-sm h-10 px-3">
+                    <List className="h-4 w-4" />
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
             </div>
 
-            {/* Results and View Toggle */}
-            <div className="flex items-center justify-between mt-4">
+            {/* Results count only */}
+            <div className="flex items-center justify-center mt-4">
               <span className="text-gray-600 font-medium">
                 {filteredDogs.length} of {dogs.length} dogs
               </span>
-              
-              <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as 'grid' | 'table')}>
-                <ToggleGroupItem value="grid" aria-label="Grid view" className="data-[state=on]:bg-orange-100 data-[state=on]:text-orange-700">
-                  <Grid className="h-4 w-4" />
-                </ToggleGroupItem>
-                <ToggleGroupItem value="table" aria-label="Table view" className="data-[state=on]:bg-orange-100 data-[state=on]:text-orange-700">
-                  <List className="h-4 w-4" />
-                </ToggleGroupItem>
-              </ToggleGroup>
             </div>
           </div>
         </div>
@@ -326,24 +406,12 @@ const Index = () => {
       {/* Dogs Section */}
       <section className="py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredDogs.map((dog) => (
-                <DogCard
-                  key={dog["Dog ID"]}
-                  dog={dog}
-                  isFavorite={false}
-                  onToggleFavorite={() => {}}
-                />
-              ))}
-            </div>
-          ) : (
-            <DogTable
-              dogs={filteredDogs}
-              favorites={[]}
-              onToggleFavorite={() => {}}
-            />
-          )}
+          <DogList
+            dogs={filteredDogs}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+            viewMode={viewMode}
+          />
 
           {filteredDogs.length === 0 && (
             <div className="text-center py-16">

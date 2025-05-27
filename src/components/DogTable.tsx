@@ -100,6 +100,12 @@ const DogTable: React.FC<DogTableProps> = ({ dogs, favorites, onToggleFavorite }
       : "bg-yellow-100 text-yellow-800 border-yellow-200";
   };
 
+  const getLevelColor = (level: number) => {
+    if (level <= 2) return 'bg-green-100 text-green-800 border-green-200';
+    if (level <= 4) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    return 'bg-red-100 text-red-800 border-red-200';
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -159,7 +165,7 @@ const DogTable: React.FC<DogTableProps> = ({ dogs, favorites, onToggleFavorite }
                     {getGenderIcon(dog.Gender)}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={getStatusColor(dog["Spay_Neuter_status"])}>
+                    <Badge variant="outline" className={getLevelColor(dog.Level)}>
                       Level {dog.Level}
                     </Badge>
                   </TableCell>

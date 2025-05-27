@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Heart, MapPin, Calendar, Weight, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { Heart, MapPin, Calendar, Weight, ChevronLeft, ChevronRight, ExternalLink, Dog, Clock, Ruler, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dog as DogType } from '@/types/Dog';
 
 interface Dog {
   "Dog ID": number;
@@ -32,6 +33,9 @@ interface Dog {
   "Heartworm_Status": string;
   "Sociability_notes": string;
   "Adopets_url": string;
+  "Days_in_Shelter": number;
+  "Fixed": string;
+  "Rabies_vax_date": string;
 }
 
 interface DogCardProps {
@@ -193,8 +197,109 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
     return null;
   };
 
+  const formatLocation = (kennel: string, room: string) => {
+    if (kennel === "Foster Care") {
+      return "In Foster";
+    }
+    
+    // Handle ISO Dogs pattern: ISO16 • ISO Dogs -> ISO Dogs 16
+    if (kennel && kennel.startsWith("ISO") && room === "ISO Dogs") {
+      const number = kennel.replace("ISO", "");
+      return `ISO Dogs ${number}`;
+    }
+    
+    // Handle ISO Puppies pattern: IsoP16 • ISO Puppies -> ISO Puppies 16
+    if (kennel && kennel.startsWith("IsoP") && room === "ISO Puppies") {
+      const number = kennel.replace("IsoP", "");
+      return `ISO Puppies ${number}`;
+    }
+    
+    // Handle Cat Hold pattern: Cat Holding (79) 06 • Cat Hold(79) -> Cat Holdings (79) - 06
+    if (kennel && kennel.includes("Cat Holding") && room && room.includes("Cat Hold")) {
+      const match = kennel.match(/Cat Holding \((\d+)\) (\d+)/);
+      if (match) {
+        const [, number1, number2] = match;
+        return `Cat Holdings (${number1}) - ${number2}`;
+      }
+    }
+    
+    // Handle Adopt Puppies pattern: P09 • Adopt Puppies -> Adoption Puppies 09
+    if (kennel && kennel.startsWith("P") && room === "Adopt Puppies") {
+      const number = kennel.replace("P", "");
+      return `Adoption Puppies ${number}`;
+    }
+    
+    // Handle Dog Hold pattern: Hold15 • Dog Hold -> Dog Holding 15
+    if (kennel && kennel.startsWith("Hold") && room === "Dog Hold") {
+      const number = kennel.replace("Hold", "");
+      return `Dog Holding ${number}`;
+    }
+    
+    // Handle Bonding Rooms pattern: Bonding Rooms A1C -> Bonding Rooms A1 - C
+    if (kennel && kennel.startsWith("Bonding Rooms") && (room === "Bonding Rooms" || !room)) {
+      const match = kennel.match(/Bonding Rooms ([A-Z]\d+)([A-Z])/);
+      if (match) {
+        const [, roomNumber, section] = match;
+        return `Bonding Rooms ${roomNumber} - ${section}`;
+      }
+      return kennel; // fallback if pattern doesn't match
+    }
+    
+    // Handle Hall Crate pattern: extract the specific crate info
+    if (kennel && kennel.includes("Hall Crate")) {
+      // Handle both "Hall Crate Hall Crate 34-B" and "Hall Crate Hall Crate 32- B • Hall Crate"
+      if (room === "Hall Crate" || !room) {
+        // Remove duplicate "Hall Crate" and extract the crate number
+        let cleaned = kennel.replace(/^Hall Crate\s+Hall Crate\s+/, "Hall Crate ");
+        // Add spaces around dashes: 34-B -> 34 - B
+        cleaned = cleaned.replace(/(\d+)-([A-Z])/g, '$1 - $2');
+        return cleaned;
+      }
+    }
+    
+    // Handle "Adopt Dogs" ranges - extract just the kennel number
+    if (room && room.includes("Adopt Dogs")) {
+      // If kennel matches the pattern (like A09, B28, C39), just show the kennel
+      if (kennel && kennel.match(/^[A-Z]\d+/)) {
+        // Format as C - 39 instead of C39
+        const formatted = kennel.replace(/^([A-Z])(\d+)/, '$1 - $2');
+        return formatted;
+      }
+    }
+    
+    // Default behavior for other locations
+    if (room && room !== kennel) {
+      return `${kennel} • ${room}`;
+    }
+    
+    return kennel;
+  };
+
+  const isDFTDEligible = (dog: Dog) => {
+    const level1 = dog.Level === 1;
+    const notFoster = dog.Location_kennel !== "Foster Care";
+    // Check the actual field name from your data
+    const fixed = dog["Spay_Neuter_status"] === "Yes";
+    const hasRabies = dog.Rabies_vax_date && dog.Rabies_vax_date.trim() !== "" && dog.Rabies_vax_date !== "N/A";
+    
+    const eligible = level1 && notFoster && fixed && hasRabies;
+    
+    // Debug log to see what's happening
+    console.log('DFTD check for', dog.Name, {
+      level1,
+      notFoster,
+      fixed,
+      spayNeuterStatus: dog["Spay_Neuter_status"],
+      hasRabies,
+      rabiesDate: dog.Rabies_vax_date,
+      eligible
+    });
+    
+    return eligible;
+  };
+
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-200">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-200 flex flex-col h-full">
       <div className="relative h-64 bg-gradient-to-br from-orange-100 to-yellow-100 overflow-hidden rounded-t-lg">
         <img
           src={getImageUrl(availablePhotos[currentImageIndex] || dog["Photo_1"])}
@@ -238,56 +343,123 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
           </div>
         )}
 
-        {/* Level badge in top right */}
-        <div className="absolute top-2 right-2">
-          <Badge variant="outline" className={`${getLevelColor(dog.Level)} backdrop-blur-sm shadow-sm`}>
+        {/* Level Badge */}
+        {dog.Level && dog.Level > 0 && (
+          <Badge 
+            variant="outline" 
+            className={`absolute top-2 right-2 text-xs font-medium ${getLevelColor(dog.Level)}`}
+          >
             Level {dog.Level}
+          </Badge>
+        )}
+
+        {/* Dog Name, Gender, and ID on same line */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-xl font-bold text-gray-900">{dog.Name}</h3>
+            <div className={`${dog.Gender === 'Male' ? 'text-blue-600' : 'text-pink-600'}`}>
+              {dog.Gender === 'Male' ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="10" cy="14" r="6"/>
+                  <path d="M16 8l4-4"/>
+                  <path d="M16 4h4v4"/>
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="6"/>
+                  <path d="M12 14v6"/>
+                  <path d="M9 17h6"/>
+                </svg>
+              )}
+            </div>
+          </div>
+          <Badge variant="outline" className="text-xs bg-white/80 backdrop-blur-sm">
+            ID: {dog["Dog ID"]}
           </Badge>
         </div>
       </div>
 
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-2">
+      <CardContent className="p-4 flex flex-col flex-1">
+        {/* Dog Name, Gender, and ID on same line */}
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-xl font-semibold text-gray-800">{dog.Name}</h3>
-            {getGenderIcon(dog.Gender)}
+            <h3 className="text-xl font-bold text-gray-900">{dog.Name}</h3>
+            <div className={`${dog.Gender === 'Male' ? 'text-blue-600' : 'text-pink-600'}`}>
+              {dog.Gender === 'Male' ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="10" cy="14" r="6"/>
+                  <path d="M16 8l4-4"/>
+                  <path d="M16 4h4v4"/>
+                </svg>
+              ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="6"/>
+                  <path d="M12 14v6"/>
+                  <path d="M9 17h6"/>
+                </svg>
+              )}
+            </div>
           </div>
-          <Badge variant="outline" className="bg-white/80 text-gray-600 border-gray-300">
+          <Badge variant="outline" className="text-xs bg-white/80 backdrop-blur-sm">
             ID: {dog["Dog ID"]}
           </Badge>
         </div>
 
-        {/* Breed */}
-        <div>
-          <p className="text-sm font-medium text-gray-700 mb-1">Breed</p>
-          <p className="text-sm text-gray-600">{getBreedDisplay(dog)}</p>
-        </div>
-
-        {/* Age, Weight, Days */}
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-2 text-gray-600">
-            <Calendar className="h-4 w-4 text-orange-500" />
-            <span>{getAgeDisplay(dog)}</span>
+        {/* Dog details */}
+        <div className="space-y-2 mb-3">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Dog className="h-4 w-4" />
+            <div className="relative group">
+              <span className="font-medium cursor-help underline decoration-dotted">Breed:</span>
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                AI-identified breed. DNA test may be required to verify.
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+              </div>
+            </div>
+            <span>{getBreedDisplay(dog)}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
-            <Weight className="h-4 w-4 text-orange-500" />
-            <span>{dog.Weight}lbs • {getSizeCategory(dog.Weight)}</span>
+          
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Clock className="h-4 w-4" />
+            <span className="font-medium">Age:</span>
+            <span>{dog.Approx_Age}</span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <Calendar className="h-4 w-4 text-orange-500" />
-          <span>{dog["Days_in_DCAS"]} days in shelter</span>
+          
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Weight className="h-4 w-4" />
+            <span className="font-medium">Weight:</span>
+            <span>{dog.Weight} lbs</span>
+          </div>
+          
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Calendar className="h-4 w-4" />
+            <span>{dog.Days_in_DCAS} days in shelter</span>
+          </div>
         </div>
 
         {/* Location */}
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <MapPin className="h-4 w-4 text-orange-500" />
-          <span>{getLocationDisplay(dog)}</span>
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+          <MapPin className="h-4 w-4" />
+          <span className="font-medium">Location:</span>
+          <span>{formatLocation(dog.Location_kennel, dog.Location_room)}</span>
+        </div>
+
+        {/* DFTD and Size badges */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          {isDFTDEligible(dog) && (
+            <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-medium">
+              <Star className="h-3 w-3 mr-1" />
+              DFTD Eligible
+            </Badge>
+          )}
+          <Badge className="bg-blue-100 text-blue-800 border-blue-200 flex items-center gap-1">
+            <Ruler className="h-3 w-3" />
+            {getSizeCategory(dog.Weight)}
+          </Badge>
         </div>
 
         {/* Status badges */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mb-4">
           <Badge variant="outline" className={getSpayNeuterColor(dog["Spay_Neuter_status"])}>
             {getSpayNeuterText(dog["Spay_Neuter_status"], dog.Gender)}
           </Badge>
@@ -305,9 +477,12 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
           )}
         </div>
 
-        {/* Adoption button */}
+        {/* Spacer to push button to bottom */}
+        <div className="flex-1"></div>
+
+        {/* Adoption button - always at bottom */}
         {dog.Adopets_url && (
-          <div className="mt-4 pt-3 border-t border-orange-100">
+          <div className="pt-3 border-t border-orange-100">
             <Button 
               asChild 
               className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-medium shadow-sm"
