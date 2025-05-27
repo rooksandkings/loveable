@@ -377,25 +377,21 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
         {/* Spacer to push button to bottom */}
         <div className="flex-1"></div>
 
-        {/* Adoption button - always at bottom */}
-        {dog.Adopets_url && (
-          <div className="pt-3 border-t border-orange-100">
-            <Button 
-              asChild 
-              className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-medium shadow-sm"
-            >
-              <a 
-                href={dog.Adopets_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2"
-              >
-                <span>View Adoption Details</span>
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </Button>
-          </div>
-        )}
+        {/* Adoption Details Button */}
+        <Button 
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+          onClick={() => {
+            if (dog.Adopets_url && dog.Adopets_url !== "Dog Not Found") {
+              window.open(dog.Adopets_url, '_blank');
+            }
+          }}
+          disabled={!dog.Adopets_url || dog.Adopets_url === "Dog Not Found"}
+        >
+          {!dog.Adopets_url || dog.Adopets_url === "Dog Not Found" 
+            ? "Currently Unavailable" 
+            : "View Adoption Details"
+          }
+        </Button>
       </CardContent>
     </Card>
   );
