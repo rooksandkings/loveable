@@ -8,8 +8,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useMemo, useState } from "react";
-import { parseAge, formatLocation } from '@/utils/dogUtils';
+import { useMemo, useState, useCallback } from "react";
+import { parseAge, formatLocation, getImageUrl, getLevelColor, getGenderIcon } from '@/utils/dogUtils';
 
 interface DogListProps {
   dogs: Dog[];
@@ -39,7 +39,7 @@ const DogList: React.FC<DogListProps> = ({ dogs, favorites, onToggleFavorite, vi
     return null;
   };
 
-  const getImageUrl = (photoUrl: string) => {
+  const getImageUrlMemo = useCallback((photoUrl: string) => {
     if (!photoUrl) return 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
     
     if (photoUrl.includes('drive.google.com')) {
@@ -50,7 +50,7 @@ const DogList: React.FC<DogListProps> = ({ dogs, favorites, onToggleFavorite, vi
     }
     
     return photoUrl;
-  };
+  }, []);
 
   if (viewMode === "table") {
     return (
@@ -81,65 +81,72 @@ const DogList: React.FC<DogListProps> = ({ dogs, favorites, onToggleFavorite, vi
                 </tr>
               </thead>
               <tbody className="divide-y divide-orange-100">
-                {dogs.map((dog) => (
-                  <tr key={dog["Dog ID"]} className="hover:bg-orange-25 transition-colors">
-                    <td className="px-4 py-3">
-                      <div className="w-16 h-16 bg-orange-50 rounded-lg overflow-hidden flex items-center justify-center">
-                        <img
-                          src={getImageUrl(dog["Photo_1"])}
-                          alt={dog.Name}
-                          className="max-w-full max-h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
-                          }}
-                        />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900">{dog.Name}</span>
-                        {getGenderIcon(dog.Gender)}
-                      </div>
-                      <div className="text-xs text-gray-500">ID: {dog["Dog ID"]}</div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {dog["Breed AI_1"] || dog["Breed AI"] || "Mixed Breed"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{dog.Approx_Age}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{dog.Weight} lbs</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${getLevelColor(dog.Level)}`}>
-                        Level {dog.Level}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="text-sm text-gray-700">
-                        {formatLocation(dog.Location_kennel, dog.Location_room)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {dog.Adopets_url ? (
-                        <Button 
-                          asChild 
-                          size="sm"
-                          className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white"
-                        >
-                          <a 
-                            href={dog.Adopets_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1"
+                {dogs.map((dog) => {
+                  const genderInfo = getGenderIcon(dog.Gender);
+                  return (
+                    <tr key={dog["Dog ID"]} className="hover:bg-orange-25 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="w-16 h-16 bg-orange-50 rounded-lg overflow-hidden flex items-center justify-center">
+                          <img
+                            src={getImageUrlMemo(dog["Photo_1"])}
+                            alt={dog.Name}
+                            className="max-w-full max-h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
+                            }}
+                          />
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          {genderInfo && (
+                            <span className={genderInfo.className}>
+                              {genderInfo.icon}
+                            </span>
+                          )}
+                          <span className="font-medium text-gray-900">{dog.Name}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">ID: {dog["Dog ID"]}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {dog["Breed AI_1"] || dog["Breed AI"] || "Mixed Breed"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{dog.Approx_Age}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700">{dog.Weight} lbs</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${getLevelColor(dog.Level)}`}>
+                          Level {dog.Level}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-sm text-gray-700">
+                          {formatLocation(dog.Location_kennel, dog.Location_room)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {dog.Adopets_url ? (
+                          <Button 
+                            asChild 
+                            size="sm"
+                            className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white"
                           >
-                            <span>Adopt</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </Button>
-                      ) : (
-                        <span className="text-gray-400 text-sm">N/A</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                            <a 
+                              href={dog.Adopets_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1"
+                            >
+                              <span>Adopt</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </Button>
+                        ) : (
+                          <span className="text-gray-400 text-sm">N/A</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

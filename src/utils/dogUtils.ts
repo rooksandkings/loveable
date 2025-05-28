@@ -80,4 +80,42 @@ export const formatLocation = (kennel: string, room: string) => {
   }
   
   return kennel;
+};
+
+// Create a shared utilities file
+export const getImageUrl = (photoUrl: string) => {
+  if (!photoUrl || photoUrl.trim() === '' || photoUrl === 'N/A') {
+    return 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
+  }
+  
+  const cleanUrl = photoUrl.trim();
+  
+  if (cleanUrl.includes('petango.com')) {
+    return cleanUrl;
+  }
+  
+  if (cleanUrl.includes('drive.google.com')) {
+    const fileId = cleanUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+    return fileId ? `https://drive.google.com/uc?id=${fileId}` : 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
+  }
+  
+  return cleanUrl;
+};
+
+export const getLevelColor = (level: number) => {
+  switch (level) {
+    case 1: return "bg-green-100 text-green-800 border-green-300";
+    case 2: return "bg-yellow-100 text-yellow-800 border-yellow-300";
+    case 3: return "bg-red-100 text-red-800 border-red-300";
+    default: return "bg-gray-100 text-gray-800 border-gray-300";
+  }
+};
+
+export const getGenderIcon = (gender: string) => {
+  if (gender.toLowerCase() === 'male') {
+    return { icon: '♂', className: 'text-blue-500 text-lg' };
+  } else if (gender.toLowerCase() === 'female') {
+    return { icon: '♀', className: 'text-pink-500 text-lg' };
+  }
+  return null;
 }; 

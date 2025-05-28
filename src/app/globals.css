@@ -1,0 +1,17 @@
+/* Add font-display: swap to existing fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ensure font fallbacks */
+body {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+/* Optimize critical above-the-fold styles */
+.hero-text {
+  font-display: swap;
+  contain: layout style paint;
+} 

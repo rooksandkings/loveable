@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Heart, MapPin, Calendar, Weight, ChevronLeft, ChevronRight, ExternalLink, Dog, Clock, Ruler, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dog as DogType } from '@/types/Dog';
-import { formatLocation } from '@/utils/dogUtils';
+import { formatLocation, getImageUrl, getLevelColor, getGenderIcon } from '@/utils/dogUtils';
 
 interface Dog {
   "Dog ID": number;
@@ -46,7 +46,7 @@ interface DogCardProps {
   onToggleFavorite: (dogId: number) => void;
 }
 
-const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) => {
+const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavorite, onToggleFavorite }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const getImageUrl = (photoUrl: string) => {
@@ -121,9 +121,9 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
 
   const getGenderIcon = (gender: string) => {
     if (gender.toLowerCase() === 'male') {
-      return <span className="text-blue-500 text-lg">♂</span>;
+      return { icon: '♂', className: 'text-blue-500 text-lg' };
     } else if (gender.toLowerCase() === 'female') {
-      return <span className="text-pink-500 text-lg">♀</span>;
+      return { icon: '♀', className: 'text-pink-500 text-lg' };
     }
     return null;
   };
@@ -192,14 +192,21 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
     return null;
   };
 
-  // Replace the calculated DFTD eligibility with API field
-  const dftdEligible = dog.DFTD_eligibility === "Yes";
+  // Optimize image handling - memoize the image URL calculation
+  const imageUrl = useMemo(() => getImageUrl(availablePhotos[currentImageIndex] || dog["Photo_1"]), [availablePhotos, currentImageIndex, dog["Photo_1"]]);
+
+  // Memoize expensive calculations
+  const dftdEligible = useMemo(() => dog.DFTD_eligibility === "Yes", [dog.DFTD_eligibility]);
+  const sizeCategory = useMemo(() => getSizeCategory(dog.Weight), [dog.Weight]);
+  const breedDisplay = useMemo(() => getBreedDisplay(dog), [dog]);
+
+  const genderInfo = getGenderIcon(dog.Gender);
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-200 flex flex-col h-full">
       <div className="relative h-64 bg-gradient-to-br from-orange-100 to-yellow-100 overflow-hidden rounded-t-lg">
         <img
-          src={getImageUrl(availablePhotos[currentImageIndex] || dog["Photo_1"])}
+          src={imageUrl}
           alt={dog.Name}
           className="w-full h-full object-contain"
           onError={(e) => {
@@ -254,21 +261,11 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <h3 className="text-xl font-bold text-gray-900">{dog.Name}</h3>
-            <div className={`${dog.Gender === 'Male' ? 'text-blue-600' : 'text-pink-600'}`}>
-              {dog.Gender === 'Male' ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="10" cy="14" r="6"/>
-                  <path d="M16 8l4-4"/>
-                  <path d="M16 4h4v4"/>
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="8" r="6"/>
-                  <path d="M12 14v6"/>
-                  <path d="M9 17h6"/>
-                </svg>
-              )}
-            </div>
+            {genderInfo && (
+              <span className={genderInfo.className}>
+                {genderInfo.icon}
+              </span>
+            )}
           </div>
           <Badge variant="outline" className="text-xs bg-white/80 backdrop-blur-sm">
             ID: {dog["Dog ID"]}
@@ -281,21 +278,11 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <h3 className="text-xl font-bold text-gray-900">{dog.Name}</h3>
-            <div className={`${dog.Gender === 'Male' ? 'text-blue-600' : 'text-pink-600'}`}>
-              {dog.Gender === 'Male' ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="10" cy="14" r="6"/>
-                  <path d="M16 8l4-4"/>
-                  <path d="M16 4h4v4"/>
-                </svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="8" r="6"/>
-                  <path d="M12 14v6"/>
-                  <path d="M9 17h6"/>
-                </svg>
-              )}
-            </div>
+            {genderInfo && (
+              <span className={genderInfo.className}>
+                {genderInfo.icon}
+              </span>
+            )}
           </div>
           <Badge variant="outline" className="text-xs bg-white/80 backdrop-blur-sm">
             ID: {dog["Dog ID"]}
@@ -313,7 +300,7 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
               </div>
             </div>
-            <span>{getBreedDisplay(dog)}</span>
+            <span>{breedDisplay}</span>
           </div>
           
           <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -351,7 +338,7 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
           )}
           <Badge className="bg-blue-100 text-blue-800 border-blue-200 flex items-center gap-1">
             <Ruler className="h-3 w-3" />
-            {getSizeCategory(dog.Weight)}
+            {sizeCategory}
           </Badge>
         </div>
 
@@ -395,6 +382,11 @@ const DogCard: React.FC<DogCardProps> = ({ dog, isFavorite, onToggleFavorite }) 
       </CardContent>
     </Card>
   );
-};
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.dog["Dog ID"] === nextProps.dog["Dog ID"] &&
+    prevProps.isFavorite === nextProps.isFavorite
+  );
+});
 
 export default DogCard;
