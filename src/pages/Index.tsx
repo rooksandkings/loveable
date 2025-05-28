@@ -143,6 +143,14 @@ const Index = () => {
         throw error;
       }
     },
+    // Optimize caching since data only updates once a day
+    staleTime: 1000 * 60 * 60 * 12, // 12 hours - data is fresh for 12 hours
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours - keep in cache for 24 hours
+    refetchOnWindowFocus: false, // Don't refetch when user returns to tab
+    refetchOnMount: false, // Don't refetch on component remount if we have cached data
+    refetchOnReconnect: false, // Don't refetch when internet reconnects
+    retry: 3, // Retry failed requests 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 
   // Function to consolidate similar breeds

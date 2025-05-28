@@ -202,6 +202,9 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
 
   const genderInfo = getGenderIcon(dog.Gender);
 
+  // Handle cases where full data might not be loaded yet
+  const isEssentialOnly = !dog.Level && !dog.Days_in_Shelter;
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-200 flex flex-col h-full">
       <div className="relative h-64 bg-gradient-to-br from-orange-100 to-yellow-100 overflow-hidden rounded-t-lg">
@@ -273,7 +276,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
         </div>
       </div>
 
-      <CardContent className="p-4 flex flex-col flex-1">
+      <CardContent className="p-4 flex-1 flex flex-col">
         {/* Dog Name, Gender, and ID on same line */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -289,37 +292,45 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
           </Badge>
         </div>
 
-        {/* Dog details */}
-        <div className="space-y-2 mb-3">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Dog className="h-4 w-4" />
-            <div className="relative group">
-              <span className="font-medium cursor-help underline decoration-dotted">Breed:</span>
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                AI-identified breed. DNA test may be required to verify.
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+        {/* Show loading state for additional details if essential-only data */}
+        {isEssentialOnly ? (
+          <div className="space-y-2 mb-3">
+            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+          </div>
+        ) : (
+          <div className="space-y-2 mb-3">
+            {/* Dog details */}
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Dog className="h-4 w-4" />
+              <div className="relative group">
+                <span className="font-medium cursor-help underline decoration-dotted">Breed:</span>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  AI-identified breed. DNA test may be required to verify.
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                </div>
               </div>
+              <span>{breedDisplay}</span>
             </div>
-            <span>{breedDisplay}</span>
+            
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Clock className="h-4 w-4" />
+              <span className="font-medium">Age:</span>
+              <span>{dog.Approx_Age}</span>
+            </div>
+            
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Weight className="h-4 w-4" />
+              <span className="font-medium">Weight:</span>
+              <span>{dog.Weight} lbs</span>
+            </div>
+            
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Calendar className="h-4 w-4" />
+              <span>{dog.Days_in_DCAS} days in shelter</span>
+            </div>
           </div>
-          
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Clock className="h-4 w-4" />
-            <span className="font-medium">Age:</span>
-            <span>{dog.Approx_Age}</span>
-          </div>
-          
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Weight className="h-4 w-4" />
-            <span className="font-medium">Weight:</span>
-            <span>{dog.Weight} lbs</span>
-          </div>
-          
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Calendar className="h-4 w-4" />
-            <span>{dog.Days_in_DCAS} days in shelter</span>
-          </div>
-        </div>
+        )}
 
         {/* Location */}
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">

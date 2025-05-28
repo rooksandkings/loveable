@@ -42,23 +42,25 @@ export default function Home() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const response = await fetch('/api/dogs');
-        const data = await response.json();
+        setLoading(true);
         
-        // Use scheduler.postTask if available, otherwise setTimeout
-        if ('scheduler' in window && 'postTask' in (window as any).scheduler) {
-          (window as any).scheduler.postTask(() => {
-            setDogs(data);
-            setLoading(false);
-          }, { priority: 'user-blocking' });
-        } else {
-          setTimeout(() => {
-            setDogs(data);
-            setLoading(false);
-          }, 0);
+        // Stage 1: Load essential data first for quick initial render
+        const essentialResponse = await fetch('/api/dogs/essential');
+        if (essentialResponse.ok) {
+          const essentialData = await essentialResponse.json();
+          setDogs(essentialData); // Show essential data immediately
+          setLoading(false); // Allow user to start browsing
         }
+        
+        // Stage 2: Load complete data in background
+        const fullResponse = await fetch('/api/dogs');
+        if (fullResponse.ok) {
+          const fullData = await fullResponse.json();
+          setDogs(fullData); // Replace with complete data
+        }
+        
       } catch (error) {
-        console.error('Error loading dogs:', error);
+        console.error('Error loading data:', error);
         setLoading(false);
       }
     };
