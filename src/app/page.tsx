@@ -128,34 +128,6 @@ export default function Home() {
     setFavorites(newFavorites);
   };
 
-  // Show minimal UI first, then enhance
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Find Your Perfect Companion
-              </h1>
-              <p 
-                className="text-xl text-gray-600 max-w-2xl mx-auto mb-8 font-inter hero-text"
-                style={{
-                  fontDisplay: 'swap',
-                  contain: 'layout style paint',
-                  willChange: 'auto'
-                }}
-              >
-                Every dog deserves a loving home. Browse our adorable rescue dogs and find your perfect companion.
-              </p>
-              <div className="animate-pulse">Loading amazing dogs...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Critical above-the-fold content */}

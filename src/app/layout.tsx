@@ -1,3 +1,9 @@
+'use client';
+
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { useState, useEffect } from 'react'
+
 export default function RootLayout({
   children,
 }: {

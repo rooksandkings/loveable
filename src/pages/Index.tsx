@@ -97,7 +97,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBreed, setSelectedBreed] = useState('all');
   const [fosterStatus, setFosterStatus] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
+  const [sortBy, setSortBy] = useState<SortOption>('name');
   const [viewMode, setViewMode] = useState('cards');
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
 
@@ -117,7 +117,6 @@ const Index = () => {
     queryKey: ['dogs'],
     queryFn: async () => {
       try {
-        console.log('Fetching dogs from Google Apps Script...');
         const response = await fetch('https://script.google.com/macros/s/AKfycbwmCI7sSpHOBevlkAFfFBJTu7wAjWLUmYOferhSC1pqDCQwxdJ0wcHeQtc0Frl_9EbKdw/exec');
         
         if (!response.ok) {
@@ -125,7 +124,6 @@ const Index = () => {
         }
         
         const data = await response.json();
-        console.log('Raw API response:', data);
         
         // Clean up the data but keep the original field names that DogCard expects
         const cleanedData = data
@@ -139,15 +137,6 @@ const Index = () => {
             "Sociability_notes": dog["Sociability_notes"]?.replace(/\n/g, '').trim() || ''
           }));
         
-        console.log('Cleaned data:', cleanedData.slice(0, 3));
-
-        // Add this temporarily to debug
-        console.log('Dog Level data:', cleanedData.slice(0, 5).map(dog => ({ 
-          name: dog.Name, 
-          level: dog.Level, 
-          levelType: typeof dog.Level 
-        })));
-
         return cleanedData;
       } catch (error) {
         console.error('Fetch error:', error);
@@ -311,28 +300,41 @@ const Index = () => {
   }, [filteredDogs, sortBy]);
 
   if (isLoading) {
+    // Show the main page immediately with loading state for dogs
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="mb-8 flex justify-center">
-            <RunningDog />
-          </div>
-          
-          <h2 className="text-2xl font-semibold text-gray-700 mb-2">Fetching the best doggos...</h2>
-          <p className="text-gray-500">Finding your perfect companion</p>
-          
-          {/* Loading dots */}
-          <div className="flex justify-center space-x-1 mt-4">
-            <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-            <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+        {/* Simple Header */}
+        <section className="py-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
+              Find Your Perfect Companion
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+              Every dog deserves a loving home. Browse our adorable rescue dogs and find your new best friend today! 🐾
+            </p>
 
-          {/* Version */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-            <p className="text-sm text-gray-400">v1.3.0</p>
+            {/* Simple Search Bar - disabled while loading */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-orange-100 max-w-5xl mx-auto opacity-50">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1 min-w-0">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    placeholder="Loading dogs..."
+                    disabled
+                    className="pl-10 h-12 border-orange-200 rounded-xl text-base"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* Loading state for dogs */}
+        <section className="py-8 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto text-center">
+            <div className="text-lg text-gray-600">Loading amazing dogs...</div>
+          </div>
+        </section>
       </div>
     );
   }
