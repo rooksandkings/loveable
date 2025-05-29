@@ -48,10 +48,11 @@ interface DogCardProps {
 
 const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavorite, onToggleFavorite }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [imageError, setImageError] = useState(false);
 
   const getImageUrl = (photoUrl: string) => {
     if (!photoUrl || photoUrl.trim() === '' || photoUrl === 'N/A') {
-      return 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
+      return null; // Return null for missing images
     }
     
     // Clean up the URL (remove any trailing newlines or whitespace)
@@ -65,7 +66,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
     // Handle Google Drive URLs (if any)
     if (cleanUrl.includes('drive.google.com')) {
       const fileId = cleanUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
-      return fileId ? `https://drive.google.com/uc?id=${fileId}` : 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
+      return fileId ? `https://drive.google.com/uc?id=${fileId}` : null;
     }
     
     return cleanUrl;
@@ -208,17 +209,35 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-200 flex flex-col h-full">
       <div className="relative h-64 bg-gradient-to-br from-orange-100 to-yellow-100 overflow-hidden rounded-t-lg">
-        <img
-          src={imageUrl}
-          alt={dog.Name}
-          className="w-full h-full object-contain"
-          onError={(e) => {
-            e.currentTarget.src = 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
-          }}
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={dog.Name}
+            className="w-full h-full object-contain"
+            onError={(e) => {
+              setImageError(true);
+            }}
+          />
+        ) : (
+          // Nice placeholder for missing images
+          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+            <Dog className="h-16 w-16 mb-2" />
+            <span className="text-sm font-medium">Photo Coming Soon</span>
+            <span className="text-xs">We're working on getting {dog.Name}'s photo!</span>
+          </div>
+        )}
 
-        {/* Navigation arrows */}
-        {hasMultiplePhotos && (
+        {/* Show placeholder if image failed to load */}
+        {imageError && (
+          <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gradient-to-br from-orange-100 to-yellow-100">
+            <Dog className="h-16 w-16 mb-2" />
+            <span className="text-sm font-medium">Image Not Available</span>
+            <span className="text-xs text-center px-4">We're working on updating {dog.Name}'s photo!</span>
+          </div>
+        )}
+
+        {/* Navigation arrows - only show if we have multiple valid photos */}
+        {hasMultiplePhotos && imageUrl && !imageError && (
           <>
             <button
               onClick={prevImage}
@@ -235,8 +254,8 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
           </>
         )}
 
-        {/* Photo indicators */}
-        {hasMultiplePhotos && (
+        {/* Photo indicators - only show if we have multiple valid photos */}
+        {hasMultiplePhotos && imageUrl && !imageError && (
           <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
             {availablePhotos.map((_, index) => (
               <button
