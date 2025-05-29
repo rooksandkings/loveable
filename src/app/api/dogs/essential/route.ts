@@ -1,25 +1,26 @@
 import { NextResponse } from 'next/server';
+import { getAllDogs } from '@/lib/neon';
 
 export async function GET() {
   try {
-    const response = await fetch(
-      'https://script.google.com/macros/s/AKfycbwmCI7sSpHOBevlkAFfFBJTu7wAjWLUmYOferhSC1pqDCQwxdJ0wcHeQtc0Frl_9EbKdw/exec?action=getEssential',
-      {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-        cache: 'no-store'
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const dogs = await getAllDogs();
     
-    return NextResponse.json(data, {
+    // Return essential fields only for faster initial load
+    const essentialData = dogs.map(dog => ({
+      "Dog ID": dog.dog_id,
+      "Name": dog.name,
+      "Breed AI": dog.breed_ai,
+      "Photo_1": dog.photo_1,
+      "Gender": dog.gender,
+      "Approx_Age": dog.approx_age,
+      "Weight": dog.weight,
+      "Level": dog.level,
+      "Location_kennel": dog.location_kennel,
+      "Foster_status": dog.foster_status,
+      "DFTD_eligibility": dog.dftd_eligibility
+    }));
+
+    return NextResponse.json(essentialData, {
       headers: {
         'Cache-Control': 'public, max-age=300',
       },

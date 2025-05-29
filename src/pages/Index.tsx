@@ -11,6 +11,7 @@ import DogList from '@/components/DogList';
 import BreedFilter from '@/components/BreedFilter';
 import FosterFilter from '@/components/FosterFilter';
 import { parseAge } from '@/utils/dogUtils';
+import { getAllDogs } from '@/lib/neon-api';
 
 interface Dog {
   "Dog ID": number;
@@ -117,27 +118,53 @@ const Index = () => {
     queryKey: ['dogs'],
     queryFn: async () => {
       try {
-        const response = await fetch('https://script.google.com/macros/s/AKfycbwmCI7sSpHOBevlkAFfFBJTu7wAjWLUmYOferhSC1pqDCQwxdJ0wcHeQtc0Frl_9EbKdw/exec');
+        const dogs = await getAllDogs();
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        // Transform to match your current frontend format
+        const transformedDogs = dogs.map((dog) => ({
+          "Dog ID": dog.dog_id,
+          "Name": dog.name,
+          "Breed AI": dog.breed_ai,
+          "Photo_1": dog.photo_1?.replace(/\n/g, '').trim() || '',
+          "Photo_2": dog.photo_2?.replace(/\n/g, '').trim() || '',
+          "Photo_3": dog.photo_3?.replace(/\n/g, '').trim() || '',
+          "Gender": dog.gender,
+          "Approx_Age": dog.approx_age,
+          "Weight": dog.weight,
+          "Level": dog.level,
+          "Location_kennel": dog.location_kennel,
+          "Location_room": dog.location_room,
+          "Spay_Neuter_status": dog.spay_neuter_status,
+          "Sociability_status": dog.sociability_status,
+          "Sociablity_playstyle": dog.sociablity_playstyle,
+          "Petpoint_url": dog.petpoint_url,
+          "Breed_AI_1": dog.breed_ai_1,
+          "Breed_AI_2": dog.breed_ai_2,
+          "Breed_AI_3": dog.breed_ai_3,
+          "DOB": dog.dob,
+          "Intake_Date": dog.intake_date,
+          "Days_in_DCAS": dog.days_in_dcas,
+          "Color_pimary": dog.color_pimary,
+          "Color_seconday": dog.color_seconday,
+          "Adoption_restriction": dog.adoption_restriction,
+          "DA2PPV_vax_date": dog.da2ppv_vax_date,
+          "Rabies_vax_date": dog.rabies_vax_date,
+          "HW_test_date": dog.hw_test_date,
+          "Heartworm_Status": dog.heartworm_status,
+          "Foster_status": dog.foster_status,
+          "L2_reason": dog.l2_reason,
+          "Play_group_initial": dog.play_group_initial,
+          "Play_group_recent": dog.play_group_recent,
+          "Sociability_notes": dog.sociability_notes?.replace(/\n/g, '').trim() || '',
+          "Adopets_url": dog.adopets_url,
+          "DFTD_eligibility": dog.dftd_eligibility,
+          "Mini_pic_1": dog.mini_pic_1,
+          "Mini_pic_2": dog.mini_pic_2,
+          "Mini_pic_3": dog.mini_pic_3,
+          "Adopets_status": dog.adopets_status
+        }));
         
-        const data = await response.json();
-        
-        // Clean up the data but keep the original field names that DogCard expects
-        const cleanedData = data
-          .filter((dog: any) => dog.Name && !dog.Name.startsWith('http'))
-          .map((dog: any) => ({
-            ...dog,
-            "Photo_1": dog["Photo_1"]?.replace(/\n/g, '').trim() || '',
-            "Photo_2": dog["Photo_2"]?.replace(/\n/g, '').trim() || '',
-            "Photo_3": dog["Photo_3"]?.replace(/\n/g, '').trim() || '',
-            "Breed AI": dog["Breed AI"]?.replace(/\n/g, '').trim() || '',
-            "Sociability_notes": dog["Sociability_notes"]?.replace(/\n/g, '').trim() || ''
-          }));
-        
-        return cleanedData;
+        return transformedDogs.filter((dog: any) => dog.Name && !dog.Name.startsWith('http'));
       } catch (error) {
         console.error('Fetch error:', error);
         throw error;
@@ -146,11 +173,11 @@ const Index = () => {
     // Optimize caching since data only updates once a day
     staleTime: 1000 * 60 * 60 * 12, // 12 hours - data is fresh for 12 hours
     gcTime: 1000 * 60 * 60 * 24, // 24 hours - keep in cache for 24 hours
-    refetchOnWindowFocus: false, // Don't refetch when user returns to tab
-    refetchOnMount: false, // Don't refetch on component remount if we have cached data
-    refetchOnReconnect: false, // Don't refetch when internet reconnects
-    retry: 3, // Retry failed requests 3 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Function to consolidate similar breeds
