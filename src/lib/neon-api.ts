@@ -48,8 +48,58 @@ export type Dog = {
 
 export async function getAllDogs(): Promise<Dog[]> {
   try {
-    const dogs = await sql`SELECT * FROM dogs ORDER BY intake_date DESC`;
-    return dogs as Dog[];
+    const result = await sql`SELECT * FROM dogs ORDER BY intake_date DESC`;
+    console.log('Raw database result:', result);
+    
+    // Check if result has rows property (array format)
+    if (result && (result as any).rows && Array.isArray((result as any).rows)) {
+      console.log('Converting array-based response to objects');
+      return (result as any).rows.map((row: any[]) => ({
+        dog_id: row[0] || '',
+        name: row[1] || '',
+        breed_ai: row[2] || '',
+        photo_1: row[3] || '',
+        photo_2: row[4] || '',
+        photo_3: row[5] || '',
+        gender: row[6] || '',
+        approx_age: row[7] || '',
+        weight: parseFloat(row[8]) || 0,
+        level: parseInt(row[9]) || 1,
+        location_kennel: row[10] || '',
+        location_room: row[11] || '',
+        spay_neuter_status: row[12] || '',
+        sociability_status: row[13] || '',
+        sociablity_playstyle: row[14] || '',
+        petpoint_url: row[15] || '',
+        breed_ai_1: row[16] || '',
+        breed_ai_2: row[17] || '',
+        breed_ai_3: row[18] || '',
+        dob: row[19] || '',
+        intake_date: row[20] || '',
+        days_in_dcas: parseInt(row[21]) || 0,
+        color_pimary: row[22] || '',
+        color_seconday: row[23] || '',
+        adoption_restriction: row[24] || '',
+        da2ppv_vax_date: row[25] || '',
+        rabies_vax_date: row[26] || '',
+        hw_test_date: row[27] || '',
+        heartworm_status: row[28] || '',
+        foster_status: row[29] || '',
+        l2_reason: row[30] || '',
+        play_group_initial: row[31] || '',
+        play_group_recent: row[32] || '',
+        sociability_notes: row[33] || '',
+        adopets_url: row[34] || '',
+        dftd_eligibility: row[35] || '',
+        mini_pic_1: row[36] || '',
+        mini_pic_2: row[37] || '',
+        mini_pic_3: row[38] || '',
+        adopets_status: row[39] || ''
+      }));
+    }
+    
+    // Fallback for object-based response
+    return result as Dog[];
   } catch (error) {
     console.error('Error fetching dogs from Neon:', error);
     throw error;
@@ -58,8 +108,57 @@ export async function getAllDogs(): Promise<Dog[]> {
 
 export async function getDogById(dogId: string): Promise<Dog | null> {
   try {
-    const dogs = await sql`SELECT * FROM dogs WHERE dog_id = ${dogId}`;
-    return dogs[0] as Dog || null;
+    const result = await sql`SELECT * FROM dogs WHERE dog_id = ${dogId}`;
+    console.log('Raw database result for single dog:', result);
+    
+    if (result && (result as any).rows && Array.isArray((result as any).rows) && (result as any).rows.length > 0) {
+      const row = (result as any).rows[0];
+      return {
+        dog_id: row[0] || '',
+        name: row[1] || '',
+        breed_ai: row[2] || '',
+        photo_1: row[3] || '',
+        photo_2: row[4] || '',
+        photo_3: row[5] || '',
+        gender: row[6] || '',
+        approx_age: row[7] || '',
+        weight: parseFloat(row[8]) || 0,
+        level: parseInt(row[9]) || 1,
+        location_kennel: row[10] || '',
+        location_room: row[11] || '',
+        spay_neuter_status: row[12] || '',
+        sociability_status: row[13] || '',
+        sociablity_playstyle: row[14] || '',
+        petpoint_url: row[15] || '',
+        breed_ai_1: row[16] || '',
+        breed_ai_2: row[17] || '',
+        breed_ai_3: row[18] || '',
+        dob: row[19] || '',
+        intake_date: row[20] || '',
+        days_in_dcas: parseInt(row[21]) || 0,
+        color_pimary: row[22] || '',
+        color_seconday: row[23] || '',
+        adoption_restriction: row[24] || '',
+        da2ppv_vax_date: row[25] || '',
+        rabies_vax_date: row[26] || '',
+        hw_test_date: row[27] || '',
+        heartworm_status: row[28] || '',
+        foster_status: row[29] || '',
+        l2_reason: row[30] || '',
+        play_group_initial: row[31] || '',
+        play_group_recent: row[32] || '',
+        sociability_notes: row[33] || '',
+        adopets_url: row[34] || '',
+        dftd_eligibility: row[35] || '',
+        mini_pic_1: row[36] || '',
+        mini_pic_2: row[37] || '',
+        mini_pic_3: row[38] || '',
+        adopets_status: row[39] || ''
+      };
+    }
+    
+    // Fallback for object-based response
+    return (result as any)[0] as Dog || null;
   } catch (error) {
     console.error('Error fetching dog by ID from Neon:', error);
     throw error;

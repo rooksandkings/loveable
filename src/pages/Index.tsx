@@ -118,7 +118,10 @@ const Index = () => {
     queryKey: ['dogs'],
     queryFn: async () => {
       try {
+        console.log('Fetching dogs...');
         const dogs = await getAllDogs();
+        console.log('Raw dogs from API:', dogs);
+        console.log('Number of dogs fetched:', dogs?.length);
         
         // Transform to match your current frontend format
         const transformedDogs = dogs.map((dog) => ({
@@ -130,8 +133,8 @@ const Index = () => {
           "Photo_3": dog.photo_3?.replace(/\n/g, '').trim() || '',
           "Gender": dog.gender,
           "Approx_Age": dog.approx_age,
-          "Weight": dog.weight,
-          "Level": dog.level,
+          "Weight": dog.weight || 0,
+          "Level": dog.level || 0,
           "Location_kennel": dog.location_kennel,
           "Location_room": dog.location_room,
           "Spay_Neuter_status": dog.spay_neuter_status,
@@ -143,7 +146,7 @@ const Index = () => {
           "Breed_AI_3": dog.breed_ai_3,
           "DOB": dog.dob,
           "Intake_Date": dog.intake_date,
-          "Days_in_DCAS": dog.days_in_dcas,
+          "Days_in_DCAS": dog.days_in_dcas || 0,
           "Color_pimary": dog.color_pimary,
           "Color_seconday": dog.color_seconday,
           "Adoption_restriction": dog.adoption_restriction,
@@ -164,7 +167,16 @@ const Index = () => {
           "Adopets_status": dog.adopets_status
         }));
         
-        return transformedDogs.filter((dog: any) => dog.Name && !dog.Name.startsWith('http'));
+        console.log('Transformed dogs:', transformedDogs);
+        console.log('Number of transformed dogs:', transformedDogs?.length);
+        console.log('First dog details:', transformedDogs[0]);
+        
+        const filteredDogs = transformedDogs.filter((dog: any) => dog.Name && !dog.Name.startsWith('http'));
+        console.log('Filtered dogs:', filteredDogs);
+        console.log('Number of filtered dogs:', filteredDogs?.length);
+        console.log('First filtered dog:', filteredDogs[0]);
+        
+        return filteredDogs;
       } catch (error) {
         console.error('Fetch error:', error);
         throw error;
@@ -312,13 +324,13 @@ const Index = () => {
         });
         break;
       case 'size':
-        sorted.sort((a, b) => parseFloat(a.Weight || '0') - parseFloat(b.Weight || '0'));
+        sorted.sort((a, b) => parseFloat(String(a.Weight || 0)) - parseFloat(String(b.Weight || 0)));
         break;
       case 'level':
-        sorted.sort((a, b) => parseInt(a.Level || '0') - parseInt(b.Level || '0'));
+        sorted.sort((a, b) => parseInt(String(a.Level || 0)) - parseInt(String(b.Level || 0)));
         break;
       case 'weight':
-        sorted.sort((a, b) => parseFloat(a.Weight || '0') - parseFloat(b.Weight || '0'));
+        sorted.sort((a, b) => parseFloat(String(a.Weight || 0)) - parseFloat(String(b.Weight || 0)));
         break;
       case 'dftdEligible':
         sorted.sort((a, b) => {

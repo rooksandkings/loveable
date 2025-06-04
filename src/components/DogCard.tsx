@@ -34,8 +34,6 @@ interface Dog {
   "Heartworm_Status": string;
   "Sociability_notes": string;
   "Adopets_url": string;
-  "Days_in_Shelter": number;
-  "Fixed": string;
   "Rabies_vax_date": string;
   "DFTD_eligibility": string;
 }
@@ -204,7 +202,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
   const genderInfo = getGenderIcon(dog.Gender);
 
   // Handle cases where full data might not be loaded yet
-  const isEssentialOnly = !dog.Level && !dog.Days_in_Shelter;
+  const isEssentialOnly = !dog.Level && !dog["Days_in_DCAS"];
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-200 flex flex-col h-full">
@@ -279,20 +277,15 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
           </Badge>
         )}
 
-        {/* Dog Name, Gender, and ID on same line */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h3 className="text-xl font-bold text-gray-900">{dog.Name}</h3>
-            {genderInfo && (
-              <span className={genderInfo.className}>
-                {genderInfo.icon}
-              </span>
-            )}
-          </div>
-          <Badge variant="outline" className="text-xs bg-white/80 backdrop-blur-sm">
-            ID: {dog["Dog ID"]}
-          </Badge>
-        </div>
+        {/* Favorite button */}
+        <button
+          onClick={() => onToggleFavorite(dog["Dog ID"])}
+          className="absolute top-2 left-2 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors duration-200 shadow-sm"
+        >
+          <Heart
+            className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'}`}
+          />
+        </button>
       </div>
 
       <CardContent className="p-4 flex-1 flex flex-col">
@@ -346,7 +339,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
             
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Calendar className="h-4 w-4" />
-              <span>{dog.Days_in_DCAS} days in shelter</span>
+              <span>{dog["Days_in_DCAS"]} days in shelter</span>
             </div>
           </div>
         )}
