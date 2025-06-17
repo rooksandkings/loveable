@@ -10,7 +10,7 @@ export async function GET() {
       "Dog ID": dog.dog_id,
       "Name": dog.name,
       "Breed AI": dog.breed_ai,
-      "Photo_1": dog.photo_1,
+      "mini_pic_1": dog.mini_pic_1,
       "Gender": dog.gender,
       "Approx_Age": dog.approx_age,
       "Weight": dog.weight,

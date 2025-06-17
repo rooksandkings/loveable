@@ -6,7 +6,7 @@ function doGetEssential(e) {
   // Find essential column indices
   const nameIndex = headers.indexOf('Name');
   const breedIndex = headers.indexOf('Breed AI');
-  const photoIndex = headers.indexOf('Photo_1');
+  const photoIndex = headers.indexOf('mini_pic_1');
   const genderIndex = headers.indexOf('Gender');
   const ageIndex = headers.indexOf('Approx_Age');
   const locationIndex = headers.indexOf('Location_kennel');

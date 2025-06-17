@@ -10,9 +10,9 @@ export async function GET() {
       "Dog ID": dog.dog_id,
       "Name": dog.name,
       "Breed AI": dog.breed_ai,
-      "Photo_1": dog.photo_1,
-      "Photo_2": dog.photo_2,
-      "Photo_3": dog.photo_3,
+      "Photo_1": dog.mini_pic_1,
+      "Photo_2": dog.mini_pic_2,
+      "Photo_3": dog.mini_pic_3,
       "Gender": dog.gender,
       "Approx_Age": dog.approx_age,
       "Weight": dog.weight,
@@ -43,9 +43,6 @@ export async function GET() {
       "Sociability_notes": dog.sociability_notes,
       "Adopets_url": dog.adopets_url,
       "DFTD_eligibility": dog.dftd_eligibility,
-      "Mini_pic_1": dog.mini_pic_1,
-      "Mini_pic_2": dog.mini_pic_2,
-      "Mini_pic_3": dog.mini_pic_3,
       "Adopets_status": dog.adopets_status
     }));
 

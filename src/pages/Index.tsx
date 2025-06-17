@@ -41,6 +41,9 @@ interface Dog {
   "Heartworm_Status": string;
   "Sociability_notes": string;
   "Adopets_url": string;
+  "mini_pic_1": string;
+  "mini_pic_2": string;
+  "mini_pic_3": string;
 }
 
 type SortOption = 'name' | 'age' | 'size' | 'level' | 'weight' | 'dftdEligible';
@@ -161,9 +164,9 @@ const Index = () => {
           "Sociability_notes": dog.sociability_notes?.replace(/\n/g, '').trim() || '',
           "Adopets_url": dog.adopets_url,
           "DFTD_eligibility": dog.dftd_eligibility,
-          "Mini_pic_1": dog.mini_pic_1,
-          "Mini_pic_2": dog.mini_pic_2,
-          "Mini_pic_3": dog.mini_pic_3,
+          "mini_pic_1": dog.mini_pic_1?.replace(/\n/g, '').trim() || '',
+          "mini_pic_2": dog.mini_pic_2?.replace(/\n/g, '').trim() || '',
+          "mini_pic_3": dog.mini_pic_3?.replace(/\n/g, '').trim() || '',
           "Adopets_status": dog.adopets_status
         }));
         

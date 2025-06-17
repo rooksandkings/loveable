@@ -11,9 +11,9 @@ export type Dog = {
   dog_id: string;
   name: string;
   breed_ai: string;
-  photo_1?: string;
-  photo_2?: string;
-  photo_3?: string;
+  mini_pic_1?: string;
+  mini_pic_2?: string;
+  mini_pic_3?: string;
   gender: string;
   approx_age: string;
   weight: number;
@@ -44,9 +44,6 @@ export type Dog = {
   sociability_notes: string;
   adopets_url: string;
   dftd_eligibility: string;
-  mini_pic_1: string;
-  mini_pic_2: string;
-  mini_pic_3: string;
   adopets_status: string;
 };
 

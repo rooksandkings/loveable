@@ -10,9 +10,9 @@ interface Dog {
   "Dog ID": number;
   "Name": string;
   "Breed AI": string;
-  "Photo_1": string;
-  "Photo_2": string;
-  "Photo_3": string;
+  "mini_pic_1": string;
+  "mini_pic_2": string;
+  "mini_pic_3": string;
   "Gender": string;
   "Approx_Age": string;
   "Weight": number;
@@ -128,7 +128,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
   };
 
   // Get available photos
-  const availablePhotos = [dog["Photo_1"], dog["Photo_2"], dog["Photo_3"]]
+  const availablePhotos = [dog["mini_pic_1"], dog["mini_pic_2"], dog["mini_pic_3"]]
     .filter(photo => photo && photo.trim() !== '' && photo !== 'N/A');
   
   const hasMultiplePhotos = availablePhotos.length > 1;
@@ -192,7 +192,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
   };
 
   // Optimize image handling - memoize the image URL calculation
-  const imageUrl = useMemo(() => getImageUrl(availablePhotos[currentImageIndex] || dog["Photo_1"]), [availablePhotos, currentImageIndex, dog["Photo_1"]]);
+  const imageUrl = useMemo(() => getImageUrl(availablePhotos[currentImageIndex] || dog["mini_pic_1"]), [availablePhotos, currentImageIndex, dog["mini_pic_1"]]);
 
   // Memoize expensive calculations
   const dftdEligible = useMemo(() => dog.DFTD_eligibility === "Yes", [dog.DFTD_eligibility]);
