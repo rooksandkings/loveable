@@ -17,9 +17,9 @@ interface Dog {
   "Dog ID": number;
   "Name": string;
   "Breed AI": string;
-  "Photo_1": string;
-  "Photo_2": string;
-  "Photo_3": string;
+  "mini_pic_1": string;
+  "mini_pic_2": string;
+  "mini_pic_3": string;
   "Gender": string;
   "Approx_Age": string;
   "Weight": number;
@@ -41,9 +41,7 @@ interface Dog {
   "Heartworm_Status": string;
   "Sociability_notes": string;
   "Adopets_url": string;
-  "mini_pic_1": string;
-  "mini_pic_2": string;
-  "mini_pic_3": string;
+  "Adopets_status": string;
 }
 
 type SortOption = 'name' | 'age' | 'size' | 'level' | 'weight' | 'dftdEligible';
@@ -131,9 +129,9 @@ const Index = () => {
           "Dog ID": dog.dog_id,
           "Name": dog.name,
           "Breed AI": dog.breed_ai,
-          "Photo_1": dog.photo_1?.replace(/\n/g, '').trim() || '',
-          "Photo_2": dog.photo_2?.replace(/\n/g, '').trim() || '',
-          "Photo_3": dog.photo_3?.replace(/\n/g, '').trim() || '',
+          "mini_pic_1": dog.mini_pic_1?.replace(/\n/g, '').trim() || '',
+          "mini_pic_2": dog.mini_pic_2?.replace(/\n/g, '').trim() || '',
+          "mini_pic_3": dog.mini_pic_3?.replace(/\n/g, '').trim() || '',
           "Gender": dog.gender,
           "Approx_Age": dog.approx_age,
           "Weight": dog.weight || 0,
@@ -164,9 +162,6 @@ const Index = () => {
           "Sociability_notes": dog.sociability_notes?.replace(/\n/g, '').trim() || '',
           "Adopets_url": dog.adopets_url,
           "DFTD_eligibility": dog.dftd_eligibility,
-          "mini_pic_1": dog.mini_pic_1?.replace(/\n/g, '').trim() || '',
-          "mini_pic_2": dog.mini_pic_2?.replace(/\n/g, '').trim() || '',
-          "mini_pic_3": dog.mini_pic_3?.replace(/\n/g, '').trim() || '',
           "Adopets_status": dog.adopets_status
         }));
         

@@ -40,16 +40,22 @@ const DogList: React.FC<DogListProps> = ({ dogs, favorites, onToggleFavorite, vi
   };
 
   const getImageUrlMemo = useCallback((photoUrl: string) => {
-    if (!photoUrl) return 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
-    
-    if (photoUrl.includes('drive.google.com')) {
-      const fileId = photoUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
-      if (fileId) {
-        return `https://drive.google.com/uc?export=view&id=${fileId}`;
-      }
+    if (!photoUrl || photoUrl.trim() === '' || photoUrl === 'N/A') {
+      return 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
     }
     
-    return photoUrl;
+    const cleanUrl = photoUrl.trim();
+    
+    if (cleanUrl.includes('petango.com')) {
+      return cleanUrl;
+    }
+    
+    if (cleanUrl.includes('drive.google.com')) {
+      const fileId = cleanUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+      return fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop&crop=face';
+    }
+    
+    return cleanUrl;
   }, []);
 
   if (viewMode === "table") {
@@ -88,7 +94,7 @@ const DogList: React.FC<DogListProps> = ({ dogs, favorites, onToggleFavorite, vi
                       <td className="px-4 py-3">
                         <div className="w-16 h-16 bg-orange-50 rounded-lg overflow-hidden flex items-center justify-center">
                           <img
-                            src={getImageUrlMemo(dog["Photo_1"])}
+                            src={getImageUrlMemo(dog["mini_pic_1"])}
                             alt={dog.Name}
                             className="max-w-full max-h-full object-cover"
                             onError={(e) => {
