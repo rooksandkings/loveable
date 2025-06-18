@@ -65,7 +65,7 @@
     --chat--color-disabled: #bcbcbc;
     --chat--color-typing: #404040;
 
-    --chat--spacing: 1.1rem;
+    --chat--spacing: 0.9rem;
     --chat--border-radius: 0.75rem;
     --chat--transition-duration: 0.2s;
 
@@ -77,7 +77,7 @@
     --chat--heading--font-size: 1.1em;
 
     --chat--message--font-size: 0.7rem;
-    --chat--message--padding: 0.85rem;
+    --chat--message--padding: 0.3rem 0.7rem;
     --chat--message--border-radius: 1.2rem;
     --chat--message--bot--background: var(--chat--color-light);
     --chat--message--bot--color: var(--chat--color-dark);
@@ -91,6 +91,10 @@
     --chat--toggle--size: 56px;
 
     --chat--subtitle--font-size: 0.95em;
+
+    --chat--message-line-height: 1.2;
+
+    --chat--message-gap: 0.2rem;
   }
 
   .dark {
@@ -177,6 +181,35 @@
   .n8n-chat__message--bot,
   .n8n-chat__message--user {
     line-height: 1.15 !important;
+  }
+
+  .n8n-chat__message {
+    margin-top: 0.15rem !important;
+    margin-bottom: 0.15rem !important;
+    padding-top: 0.2rem !important;
+    padding-bottom: 0.2rem !important;
+  }
+
+  .n8n-chat__messages {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  .n8n-chat__window {
+    padding-top: 0 !important;
+  }
+
+  .n8n-chat__content {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  .n8n-chat__subtitle {
+    margin-bottom: 0.2rem !important;
+  }
+
+  .chat-messages-list {
+    margin-top: 0 !important;
   }
 }
 
