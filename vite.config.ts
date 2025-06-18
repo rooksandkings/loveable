@@ -5,10 +5,6 @@ import { resolve } from "path";
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '/loveable/',
-  server: {
-    port: 3000,
-    open: true
-  },
   plugins: [react()],
   resolve: {
     alias: {
@@ -34,13 +30,5 @@ export default defineConfig({
         drop_debugger: true,
       },
     },
-  },
-  optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      'react-router-dom',
-      '@tanstack/react-query',
-    ],
   },
 });
