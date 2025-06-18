@@ -36,6 +36,10 @@ interface Dog {
   "Adopets_url": string;
   "Rabies_vax_date": string;
   "DFTD_eligibility": string;
+  "Cuddle_Meter": string;
+  "Kid_Interaction": string;
+  "Cat_Interaction": string;
+  "Dog_Interaction": string;
 }
 
 interface DogCardProps {
@@ -373,15 +377,59 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
             {getSpayNeuterText(dog["Spay_Neuter_status"], dog.Gender)}
           </Badge>
           
-          {dog["Sociability_status"] && (
+          {/* Only show sociability status if it's different from playstyle */}
+          {dog["Sociability_status"] && 
+           dog["Sociability_status"] !== dog["Sociablity_playstyle"] && (
             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
               {dog["Sociability_status"]}
             </Badge>
           )}
           
+          {/* Always show playstyle if it exists */}
           {dog["Sociablity_playstyle"] && (
             <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
               {dog["Sociablity_playstyle"]}
+            </Badge>
+          )}
+
+          {/* New interaction badges - only show if not N/A, Unknown, or Not tested */}
+          {dog["Cuddle_Meter"] && 
+           dog["Cuddle_Meter"] !== "N/A" && 
+           dog["Cuddle_Meter"] !== "Unknown" && 
+           !dog["Cuddle_Meter"].includes("Unknown") && 
+           !dog["Cuddle_Meter"].includes("Not tested") && (
+            <Badge variant="outline" className="bg-pink-50 text-pink-700 border-pink-200">
+              Cuddle: {dog["Cuddle_Meter"]}
+            </Badge>
+          )}
+
+          {dog["Kid_Interaction"] && 
+           dog["Kid_Interaction"] !== "N/A" && 
+           dog["Kid_Interaction"] !== "Unknown" && 
+           !dog["Kid_Interaction"].includes("Unknown") && 
+           !dog["Kid_Interaction"].includes("Not tested") && (
+            <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+              Kids: {dog["Kid_Interaction"]}
+            </Badge>
+          )}
+
+          {dog["Cat_Interaction"] && 
+           dog["Cat_Interaction"] !== "N/A" && 
+           dog["Cat_Interaction"] !== "Unknown" && 
+           !dog["Cat_Interaction"].includes("Unknown") && 
+           !dog["Cat_Interaction"].includes("Not tested") && (
+            <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">
+              Cats: {dog["Cat_Interaction"]}
+            </Badge>
+          )}
+
+          {dog["Dog_Interaction"] && 
+           dog["Dog_Interaction"] !== "N/A" && 
+           dog["Dog_Interaction"] !== "Unknown" && 
+           !dog["Dog_Interaction"].includes("Unknown") && 
+           !dog["Dog_Interaction"].includes("Not tested") && (
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+              Dogs: {dog["Dog_Interaction"]}
             </Badge>
           )}
         </div>

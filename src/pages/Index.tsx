@@ -42,6 +42,14 @@ interface Dog {
   "Sociability_notes": string;
   "Adopets_url": string;
   "Adopets_status": string;
+  "Cuddle_Meter": string;
+  "Kid_Interaction": string;
+  "Cat_Interaction": string;
+  "Dog_Interaction": string;
+  "Potty_Skills": string;
+  "Crate_Trained": string;
+  "Energy_Activity_Level": string;
+  "Leash_Skills": string;
 }
 
 type SortOption = 'name' | 'age' | 'size' | 'level' | 'weight' | 'dftdEligible';
@@ -164,7 +172,15 @@ const Index = () => {
             "Sociability_notes": dog.sociability_notes?.replace(/\n/g, '').trim() || '',
             "Adopets_url": dog.adopets_url,
             "DFTD_eligibility": dog.dftd_eligibility,
-            "Adopets_status": dog.adopets_status
+            "Adopets_status": dog.adopets_status,
+            "Cuddle_Meter": dog.Cuddle_Meter || '',
+            "Kid_Interaction": dog.Kid_Interaction || '',
+            "Cat_Interaction": dog.Cat_Interaction || '',
+            "Dog_Interaction": dog.Dog_Interaction || '',
+            "Potty_Skills": dog.Potty_Skills || '',
+            "Crate_Trained": dog.Crate_Trained || '',
+            "Energy_Activity_Level": dog.Energy_Activity_Level || '',
+            "Leash_Skills": dog.Leash_Skills || ''
           };
           console.log('Transformed dog:', transformed);
           return transformed;
