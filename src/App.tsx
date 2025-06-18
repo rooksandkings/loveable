@@ -2,8 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
-import { wsManager } from "@/utils/websocket";
+import { lazy, Suspense } from "react";
 
 // Optimize QueryClient configuration
 const queryClient = new QueryClient({
@@ -34,48 +33,18 @@ const LoadingFallback = () => (
   </div>
 );
 
-// Memoize the router to prevent unnecessary re-renders
 const Router = () => (
   <HashRouter>
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        <Route 
-          path="/" 
-          element={
-            <Suspense fallback={<LoadingFallback />}>
-              <Index />
-            </Suspense>
-          } 
-        />
-        <Route 
-          path="*" 
-          element={
-            <Suspense fallback={<LoadingFallback />}>
-              <NotFound />
-            </Suspense>
-          } 
-        />
+        <Route path="/" element={<Index />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   </HashRouter>
 );
 
 const App = () => {
-  useEffect(() => {
-    // Handle bfcache restoration
-    const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) {
-        // Reconnect WebSocket when restored from bfcache
-        wsManager.connect();
-        // Invalidate queries to ensure fresh data
-        queryClient.invalidateQueries();
-      }
-    };
-
-    window.addEventListener('pageshow', handlePageShow);
-    return () => window.removeEventListener('pageshow', handlePageShow);
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
