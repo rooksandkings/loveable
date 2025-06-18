@@ -1,5 +1,35 @@
 export interface Dog {
-  // ... existing code ...
-  Sociability_notes: string;
-  Adopets_url: string;
+  "Dog ID": number;
+  "Name": string;
+  "Breed AI": string;
+  "mini_pic_1": string;
+  "mini_pic_2": string;
+  "mini_pic_3": string;
+  "Gender": string;
+  "Approx_Age": string;
+  "Weight": number;
+  "Level": number;
+  "Location_kennel": string;
+  "Location_room": string;
+  "Spay_Neuter_status": string;
+  "Sociability_status": string;
+  "Sociablity_playstyle": string;
+  "Breed_AI_1": string;
+  "Breed_AI_2": string;
+  "Breed_AI_3": string;
+  "DOB": string;
+  "Intake_Date": string;
+  "Days_in_DCAS": number;
+  "Color_pimary": string;
+  "Color_seconday": string;
+  "Foster_status": string;
+  "Heartworm_Status": string;
+  "Sociability_notes": string;
+  "Adopets_url": string;
+  "Rabies_vax_date": string;
+  "DFTD_eligibility": string;
+  "Cuddle_Meter": string;
+  "Kid_Interaction": string;
+  "Cat_Interaction": string;
+  "Dog_Interaction": string;
 } 

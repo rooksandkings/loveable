@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Implement dynamic imports with prefetching only when needed
+// Implement dynamic imports with better code splitting
 const Index = lazy(() => 
   import(/* webpackChunkName: "index" */ "./pages/Index")
 );
@@ -39,8 +39,22 @@ const Router = () => (
   <HashRouter>
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="*" element={<NotFound />} />
+        <Route 
+          path="/" 
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Index />
+            </Suspense>
+          } 
+        />
+        <Route 
+          path="*" 
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <NotFound />
+            </Suspense>
+          } 
+        />
       </Routes>
     </Suspense>
   </HashRouter>
