@@ -119,6 +119,8 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
   };
 
   const getGenderIcon = (gender: string) => {
+    if (!gender) return null;
+    
     if (gender.toLowerCase() === 'male') {
       return { icon: '♂', className: 'text-blue-500 text-lg' };
     } else if (gender.toLowerCase() === 'female') {

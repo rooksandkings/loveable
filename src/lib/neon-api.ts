@@ -40,9 +40,6 @@ export type Dog = {
   sociability_notes: string;
   adopets_url: string;
   dftd_eligibility: string;
-  mini_pic_1: string;
-  mini_pic_2: string;
-  mini_pic_3: string;
   adopets_status: string;
 };
 
@@ -58,9 +55,6 @@ export async function getAllDogs(): Promise<Dog[]> {
         dog_id: row[0] || '',
         name: row[1] || '',
         breed_ai: row[2] || '',
-        mini_pic_1: row[3] || '',
-        mini_pic_2: row[4] || '',
-        mini_pic_3: row[5] || '',
         gender: row[6] || '',
         approx_age: row[7] || '',
         weight: parseFloat(row[8]) || 0,
@@ -117,9 +111,6 @@ export async function getDogById(dogId: string): Promise<Dog | null> {
         dog_id: row[0] || '',
         name: row[1] || '',
         breed_ai: row[2] || '',
-        mini_pic_1: row[3] || '',
-        mini_pic_2: row[4] || '',
-        mini_pic_3: row[5] || '',
         gender: row[6] || '',
         approx_age: row[7] || '',
         weight: parseFloat(row[8]) || 0,

@@ -125,54 +125,68 @@ const Index = () => {
         console.log('Number of dogs fetched:', dogs?.length);
         
         // Transform to match your current frontend format
-        const transformedDogs = dogs.map((dog) => ({
-          "Dog ID": dog.dog_id,
-          "Name": dog.name,
-          "Breed AI": dog.breed_ai,
-          "mini_pic_1": dog.mini_pic_1?.replace(/\n/g, '').trim() || '',
-          "mini_pic_2": dog.mini_pic_2?.replace(/\n/g, '').trim() || '',
-          "mini_pic_3": dog.mini_pic_3?.replace(/\n/g, '').trim() || '',
-          "Gender": dog.gender,
-          "Approx_Age": dog.approx_age,
-          "Weight": dog.weight || 0,
-          "Level": dog.level || 0,
-          "Location_kennel": dog.location_kennel,
-          "Location_room": dog.location_room,
-          "Spay_Neuter_status": dog.spay_neuter_status,
-          "Sociability_status": dog.sociability_status,
-          "Sociablity_playstyle": dog.sociablity_playstyle,
-          "Petpoint_url": dog.petpoint_url,
-          "Breed_AI_1": dog.breed_ai_1,
-          "Breed_AI_2": dog.breed_ai_2,
-          "Breed_AI_3": dog.breed_ai_3,
-          "DOB": dog.dob,
-          "Intake_Date": dog.intake_date,
-          "Days_in_DCAS": dog.days_in_dcas || 0,
-          "Color_pimary": dog.color_pimary,
-          "Color_seconday": dog.color_seconday,
-          "Adoption_restriction": dog.adoption_restriction,
-          "DA2PPV_vax_date": dog.da2ppv_vax_date,
-          "Rabies_vax_date": dog.rabies_vax_date,
-          "HW_test_date": dog.hw_test_date,
-          "Heartworm_Status": dog.heartworm_status,
-          "Foster_status": dog.foster_status,
-          "L2_reason": dog.l2_reason,
-          "Play_group_initial": dog.play_group_initial,
-          "Play_group_recent": dog.play_group_recent,
-          "Sociability_notes": dog.sociability_notes?.replace(/\n/g, '').trim() || '',
-          "Adopets_url": dog.adopets_url,
-          "DFTD_eligibility": dog.dftd_eligibility,
-          "Adopets_status": dog.adopets_status
-        }));
+        const transformedDogs = dogs.map((dog) => {
+          console.log('Processing dog:', dog.dog_id, dog.name);
+          const transformed = {
+            "Dog ID": dog.dog_id,
+            "Name": dog.name,
+            "Breed AI": dog.breed_ai,
+            "mini_pic_1": dog.mini_pic_1?.replace(/\n/g, '').trim() || '',
+            "mini_pic_2": dog.mini_pic_2?.replace(/\n/g, '').trim() || '',
+            "mini_pic_3": dog.mini_pic_3?.replace(/\n/g, '').trim() || '',
+            "Gender": dog.gender?.trim() || 'Unknown',
+            "Approx_Age": dog.approx_age,
+            "Weight": dog.weight || 0,
+            "Level": dog.level || 0,
+            "Location_kennel": dog.location_kennel,
+            "Location_room": dog.location_room,
+            "Spay_Neuter_status": dog.spay_neuter_status,
+            "Sociability_status": dog.sociability_status,
+            "Sociablity_playstyle": dog.sociablity_playstyle,
+            "Petpoint_url": dog.petpoint_url,
+            "Breed_AI_1": dog.breed_ai_1,
+            "Breed_AI_2": dog.breed_ai_2,
+            "Breed_AI_3": dog.breed_ai_3,
+            "DOB": dog.dob,
+            "Intake_Date": dog.intake_date,
+            "Days_in_DCAS": dog.days_in_dcas || 0,
+            "Color_pimary": dog.color_pimary,
+            "Color_seconday": dog.color_seconday,
+            "Adoption_restriction": dog.adoption_restriction,
+            "DA2PPV_vax_date": dog.da2ppv_vax_date,
+            "Rabies_vax_date": dog.rabies_vax_date,
+            "HW_test_date": dog.hw_test_date,
+            "Heartworm_Status": dog.heartworm_status,
+            "Foster_status": dog.foster_status,
+            "L2_reason": dog.l2_reason,
+            "Play_group_initial": dog.play_group_initial,
+            "Play_group_recent": dog.play_group_recent,
+            "Sociability_notes": dog.sociability_notes?.replace(/\n/g, '').trim() || '',
+            "Adopets_url": dog.adopets_url,
+            "DFTD_eligibility": dog.dftd_eligibility,
+            "Adopets_status": dog.adopets_status
+          };
+          console.log('Transformed dog:', transformed);
+          return transformed;
+        });
         
         console.log('Transformed dogs:', transformedDogs);
         console.log('Number of transformed dogs:', transformedDogs?.length);
-        console.log('First dog details:', transformedDogs[0]);
         
-        const filteredDogs = transformedDogs.filter((dog: any) => dog.Name && !dog.Name.startsWith('http'));
+        const filteredDogs = transformedDogs.filter((dog: any) => {
+          const isValid = dog.Name && !dog.Name.startsWith('http');
+          if (!isValid) {
+            console.log('Filtered out dog:', dog);
+          }
+          return isValid;
+        });
+        
         console.log('Filtered dogs:', filteredDogs);
         console.log('Number of filtered dogs:', filteredDogs?.length);
-        console.log('First filtered dog:', filteredDogs[0]);
+        
+        if (filteredDogs.length === 0) {
+          console.warn('No dogs passed the filter!');
+        }
         
         return filteredDogs;
       } catch (error) {
@@ -302,8 +316,11 @@ const Index = () => {
       const matchesFoster = fosterStatus === 'all' || 
         (fosterStatus === 'yes' && dog.Location_kennel === 'Foster Care') ||
         (fosterStatus === 'no' && dog.Location_kennel !== 'Foster Care');
+
+      // Filter out dogs without a valid adoption URL
+      const hasValidAdoptionUrl = dog.Adopets_url && dog.Adopets_url !== "Dog Not Found";
       
-      return matchesSearch && matchesBreed && matchesFoster;
+      return matchesSearch && matchesBreed && matchesFoster && hasValidAdoptionUrl;
     });
   }, [dogs, searchTerm, selectedBreed, fosterStatus]);
 
