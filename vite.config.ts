@@ -3,11 +3,11 @@ import react from "@vitejs/plugin-react-swc";
 import { resolve } from "path";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   base: '/loveable/',
   server: {
-    host: "::",
-    port: 8080,
+    port: 3000,
+    open: true
   },
   plugins: [react()],
   resolve: {
@@ -43,4 +43,4 @@ export default defineConfig(({ mode }) => ({
       '@tanstack/react-query',
     ],
   },
-}));
+});
