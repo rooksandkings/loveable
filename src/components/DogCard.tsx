@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dog as DogType } from '@/types/Dog';
 import { formatLocation } from '@/utils/dogUtils';
 import { useDogCard } from '@/hooks/useDogCard';
+import N8nChatEmbed from "@/components/N8nChatEmbed";
 
 interface DogCardProps {
   dog: DogType;

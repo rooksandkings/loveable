@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import N8nChatEmbed from "@/components/N8nChatEmbed";
 
 // Optimize QueryClient configuration
 const queryClient = new QueryClient({
@@ -50,6 +51,7 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <N8nChatEmbed />
       </TooltipProvider>
     </QueryClientProvider>
   );
