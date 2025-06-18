@@ -11,15 +11,20 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 60 * 6, // 6 hours
       gcTime: 1000 * 60 * 60 * 24, // 24 hours
       refetchOnWindowFocus: false,
-      retry: 2,
-      suspense: true,
+      retry: 1,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
     },
   },
 });
 
-// Lazy load pages with prefetching
-const Index = lazy(() => import(/* webpackPrefetch: true */ "./pages/Index"));
-const NotFound = lazy(() => import(/* webpackPrefetch: true */ "./pages/NotFound"));
+// Implement dynamic imports with prefetching only when needed
+const Index = lazy(() => 
+  import(/* webpackChunkName: "index" */ "./pages/Index")
+);
+const NotFound = lazy(() => 
+  import(/* webpackChunkName: "not-found" */ "./pages/NotFound")
+);
 
 // Optimize loading component
 const LoadingFallback = () => (
@@ -28,18 +33,23 @@ const LoadingFallback = () => (
   </div>
 );
 
+// Memoize the router to prevent unnecessary re-renders
+const Router = () => (
+  <HashRouter>
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
+  </HashRouter>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <HashRouter>
-        <Suspense fallback={<LoadingFallback />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </HashRouter>
+      <Router />
     </TooltipProvider>
   </QueryClientProvider>
 );
