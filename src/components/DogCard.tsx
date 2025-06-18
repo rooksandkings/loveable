@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Heart, MapPin, Calendar, Weight, ChevronLeft, ChevronRight, ExternalLink, Dog, Clock, Ruler, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,30 +52,28 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
 
-  const getImageUrl = (photoUrl: string) => {
+  // Memoize expensive computations
+  const getImageUrl = useCallback((photoUrl: string) => {
     if (!photoUrl || photoUrl.trim() === '' || photoUrl === 'N/A') {
-      return null; // Return null for missing images
+      return null;
     }
     
-    // Clean up the URL (remove any trailing newlines or whitespace)
     const cleanUrl = photoUrl.trim();
     
-    // Petango URLs should work directly
     if (cleanUrl.includes('petango.com')) {
       return cleanUrl;
     }
     
-    // Handle Google Drive URLs (if any)
     if (cleanUrl.includes('drive.google.com')) {
       const fileId = cleanUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
       return fileId ? `https://drive.google.com/uc?id=${fileId}` : null;
     }
     
     return cleanUrl;
-  };
+  }, []);
 
-  // Helper functions
-  const getLevelColor = (level: number) => {
+  // Memoize helper functions
+  const getLevelColor = useCallback((level: number) => {
     switch (level) {
       case 1:
         return "bg-green-100 text-green-800 border-green-200";
@@ -86,16 +84,47 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
-  };
+  }, []);
 
-  const getBreedDisplay = (dog: Dog) => {
+  const getBreedDisplay = useCallback((dog: Dog) => {
     return dog["Breed AI"] || 'Mixed Breed';
-  };
+  }, []);
 
-  const getAgeDisplay = (dog: Dog) => {
+  const getAgeDisplay = useCallback((dog: Dog) => {
     return dog.Approx_Age || 'Unknown';
-  };
+  }, []);
 
+  // Get available photos
+  const availablePhotos = useMemo(() => {
+    const photos = [];
+    if (dog["mini_pic_1"]) photos.push(dog["mini_pic_1"]);
+    if (dog["mini_pic_2"]) photos.push(dog["mini_pic_2"]);
+    if (dog["mini_pic_3"]) photos.push(dog["mini_pic_3"]);
+    return photos;
+  }, [dog["mini_pic_1"], dog["mini_pic_2"], dog["mini_pic_3"]]);
+
+  // Memoize the current image URL
+  const currentImageUrl = useMemo(() => {
+    if (availablePhotos.length === 0) return null;
+    return getImageUrl(availablePhotos[currentImageIndex]);
+  }, [availablePhotos, currentImageIndex, getImageUrl]);
+
+  // Handle image loading errors
+  const handleImageError = useCallback(() => {
+    setImageError(true);
+    // Try next image if available
+    if (availablePhotos.length > currentImageIndex + 1) {
+      setCurrentImageIndex(prev => prev + 1);
+    }
+  }, [currentImageIndex, availablePhotos]);
+
+  // Reset image error state when dog changes
+  useEffect(() => {
+    setImageError(false);
+    setCurrentImageIndex(0);
+  }, [dog["Dog ID"]]);
+
+  // Helper functions
   const getSizeCategory = (weight: number) => {
     if (weight <= 25) return 'Small';
     if (weight <= 60) return 'Medium';
@@ -133,10 +162,6 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
     return null;
   };
 
-  // Get available photos
-  const availablePhotos = [dog["mini_pic_1"], dog["mini_pic_2"], dog["mini_pic_3"]]
-    .filter(photo => photo && photo.trim() !== '' && photo !== 'N/A');
-  
   const hasMultiplePhotos = availablePhotos.length > 1;
 
   const getStatusColor = (status: string) => {
@@ -197,9 +222,6 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
     return null;
   };
 
-  // Optimize image handling - memoize the image URL calculation
-  const imageUrl = useMemo(() => getImageUrl(availablePhotos[currentImageIndex] || dog["mini_pic_1"]), [availablePhotos, currentImageIndex, dog["mini_pic_1"]]);
-
   // Memoize expensive calculations
   const dftdEligible = useMemo(() => dog.DFTD_eligibility === "Yes", [dog.DFTD_eligibility]);
   const sizeCategory = useMemo(() => getSizeCategory(dog.Weight), [dog.Weight]);
@@ -213,14 +235,13 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-200 flex flex-col h-full">
       <div className="relative h-64 bg-gradient-to-br from-orange-100 to-yellow-100 overflow-hidden rounded-t-lg">
-        {imageUrl ? (
+        {currentImageUrl && !imageError ? (
           <img
-            src={imageUrl}
+            src={currentImageUrl}
             alt={dog.Name}
             className="w-full h-full object-contain"
-            onError={(e) => {
-              setImageError(true);
-            }}
+            loading="lazy"
+            onError={handleImageError}
           />
         ) : (
           // Nice placeholder for missing images
@@ -241,7 +262,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
         )}
 
         {/* Navigation arrows - only show if we have multiple valid photos */}
-        {hasMultiplePhotos && imageUrl && !imageError && (
+        {hasMultiplePhotos && currentImageUrl && !imageError && (
           <>
             <button
               onClick={prevImage}
@@ -259,7 +280,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
         )}
 
         {/* Photo indicators - only show if we have multiple valid photos */}
-        {hasMultiplePhotos && imageUrl && !imageError && (
+        {hasMultiplePhotos && currentImageUrl && !imageError && (
           <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
             {availablePhotos.map((_, index) => (
               <button
@@ -461,5 +482,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
     prevProps.isFavorite === nextProps.isFavorite
   );
 });
+
+DogCard.displayName = 'DogCard';
 
 export default DogCard;
