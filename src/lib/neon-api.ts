@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 
 // Use your connection string from earlier
-const sql = neon('postgresql://neondb_owner:npg_trG0JRad6sxP@ep-flat-smoke-a5gx7mdm-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require');
+const sql = neon('postgresql://neondb_owner:npg_mD7PdS5XIhKH@ep-flat-smoke-a5gx7mdm-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require');
 
 export type Dog = {
   dog_id: string;
