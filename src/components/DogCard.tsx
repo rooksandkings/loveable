@@ -113,10 +113,26 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
           </div>
         )}
 
+        {/* Shelter Bubble */}
+        {dog.shelter_location && (
+          <Badge
+            variant="outline"
+            className={`absolute top-2 right-2 text-xs font-semibold
+              ${dog.shelter_location === 'DCAS' ? 'bg-orange-100 text-orange-800 border-orange-200' : ''}
+              ${dog.shelter_location === 'FCAS' ? 'bg-blue-100 text-blue-800 border-blue-200' : ''}
+              ${dog.shelter_location === 'CAC' ? 'bg-green-100 text-green-800 border-green-200' : ''}
+            `}
+          >
+            {dog.shelter_location === 'DCAS' && 'Dekalb'}
+            {dog.shelter_location === 'FCAS' && 'Fulton'}
+            {dog.shelter_location === 'CAC' && 'CAC'}
+          </Badge>
+        )}
+        {/* Level Bubble */}
         {dog.Level && dog.Level > 0 && (
           <Badge 
             variant="outline" 
-            className={`absolute top-2 right-2 text-xs font-medium ${getLevelColor(dog.Level)}`}
+            className={`absolute top-10 right-2 text-xs font-medium ${getLevelColor(Number(dog.Level))}`}
           >
             Level {dog.Level}
           </Badge>
