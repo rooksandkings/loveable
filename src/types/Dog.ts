@@ -1,5 +1,5 @@
 export interface Dog {
-  "Dog ID": number;
+  "Dog ID": string;
   "Name": string;
   "Breed AI": string;
   "mini_pic_1": string;
@@ -32,4 +32,5 @@ export interface Dog {
   "Kid_Interaction": string;
   "Cat_Interaction": string;
   "Dog_Interaction": string;
+  "shelter_location": string;
 } 

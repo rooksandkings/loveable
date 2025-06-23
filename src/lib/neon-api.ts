@@ -49,6 +49,7 @@ export type Dog = {
   Crate_Trained: string;
   Energy_Activity_Level: string;
   Leash_Skills: string;
+  shelter_location: string;
 };
 
 export async function getAllDogs(): Promise<Dog[]> {
@@ -64,7 +65,7 @@ export async function getAllDogs(): Promise<Dog[]> {
         play_group_recent, sociability_notes, adopets_url, dftd_eligibility, 
         mini_pic_1, mini_pic_2, mini_pic_3, adopets_status, "Cuddle_Meter", 
         "Kid_Interaction", "Cat_Interaction", "Dog_Interaction", "Potty_Skills",
-        "Crate_Trained", "Energy_Activity_Level", "Leash_Skills"
+        "Crate_Trained", "Energy_Activity_Level", "Leash_Skills", shelter_location
       FROM dogs 
       ORDER BY intake_date DESC
     `;
@@ -120,7 +121,8 @@ export async function getAllDogs(): Promise<Dog[]> {
           Potty_Skills: row[44] || '',
           Crate_Trained: row[45] || '',
           Energy_Activity_Level: row[46] || '',
-          Leash_Skills: row[47] || ''
+          Leash_Skills: row[47] || '',
+          shelter_location: row[48] || '',
         };
         console.log('Processed dog:', dog.name, {
           Cuddle_Meter: dog.Cuddle_Meter,
@@ -193,7 +195,8 @@ export async function getDogById(dogId: string): Promise<Dog | null> {
         Potty_Skills: row[44] || '',
         Crate_Trained: row[45] || '',
         Energy_Activity_Level: row[46] || '',
-        Leash_Skills: row[47] || ''
+        Leash_Skills: row[47] || '',
+        shelter_location: row[48] || '',
       };
     }
     

@@ -50,6 +50,7 @@ interface Dog {
   "Crate_Trained": string;
   "Energy_Activity_Level": string;
   "Leash_Skills": string;
+  "shelter_location": string;
 }
 
 type SortOption = 'name' | 'age' | 'size' | 'level' | 'weight' | 'dftdEligible';
@@ -106,7 +107,7 @@ const RunningDog = () => (
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBreed, setSelectedBreed] = useState('all');
-  const [fosterStatus, setFosterStatus] = useState('all');
+  const [locationFilter, setLocationFilter] = useState('all');
   const [sortBy, setSortBy] = useState<SortOption>('name');
   const [viewMode, setViewMode] = useState('cards');
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
@@ -180,7 +181,8 @@ const Index = () => {
             "Potty_Skills": dog.Potty_Skills || '',
             "Crate_Trained": dog.Crate_Trained || '',
             "Energy_Activity_Level": dog.Energy_Activity_Level || '',
-            "Leash_Skills": dog.Leash_Skills || ''
+            "Leash_Skills": dog.Leash_Skills || '',
+            "shelter_location": dog.shelter_location || '',
           };
           console.log('Transformed dog:', transformed);
           return transformed;
@@ -325,20 +327,45 @@ const Index = () => {
       const matchesSearch = searchTerm === '' || 
         dog.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         consolidateBreed(dog["Breed AI"]).toLowerCase().includes(searchTerm.toLowerCase());
-      
       const matchesBreed = selectedBreed === 'all' || 
         consolidateBreed(dog["Breed AI"]) === selectedBreed;
-      
-      const matchesFoster = fosterStatus === 'all' || 
-        (fosterStatus === 'yes' && dog.Location_kennel === 'Foster Care') ||
-        (fosterStatus === 'no' && dog.Location_kennel !== 'Foster Care');
-
+      const isFoster =
+        (dog.Location_kennel && dog.Location_kennel.toLowerCase().includes('foster')) ||
+        (dog.Location_room && dog.Location_room.toLowerCase().includes('foster'));
+      let matchesLocation = true;
+      switch (locationFilter) {
+        case 'all':
+          matchesLocation = true;
+          break;
+        case 'all_in_foster':
+          matchesLocation = isFoster;
+          break;
+        case 'DCAS_in_shelter':
+          matchesLocation = dog.shelter_location === 'DCAS' && !isFoster;
+          break;
+        case 'DCAS_in_foster':
+          matchesLocation = isFoster && dog.shelter_location === 'DCAS';
+          break;
+        case 'FCAS_in_shelter':
+          matchesLocation = dog.shelter_location === 'FCAS' && !isFoster;
+          break;
+        case 'FCAS_in_foster':
+          matchesLocation = isFoster && dog.shelter_location === 'FCAS';
+          break;
+        case 'CAC_in_shelter':
+          matchesLocation = dog.shelter_location === 'CAC' && !isFoster;
+          break;
+        case 'CAC_in_foster':
+          matchesLocation = isFoster && dog.shelter_location === 'CAC';
+          break;
+        default:
+          matchesLocation = true;
+      }
       // Filter out dogs without a valid adoption URL
       const hasValidAdoptionUrl = dog.Adopets_url && dog.Adopets_url !== "Dog Not Found";
-      
-      return matchesSearch && matchesBreed && matchesFoster && hasValidAdoptionUrl;
+      return matchesSearch && matchesBreed && matchesLocation && hasValidAdoptionUrl;
     });
-  }, [dogs, searchTerm, selectedBreed, fosterStatus]);
+  }, [dogs, searchTerm, selectedBreed, locationFilter]);
 
   const sortedDogs = useMemo(() => {
     const sorted = [...filteredDogs];
@@ -475,14 +502,19 @@ const Index = () => {
                   </SelectContent>
                 </Select>
 
-                <Select value={fosterStatus} onValueChange={setFosterStatus}>
-                  <SelectTrigger className="h-12 w-40 border-orange-200 focus:border-orange-400 focus:ring-orange-400 rounded-xl">
+                <Select value={locationFilter} onValueChange={setLocationFilter}>
+                  <SelectTrigger className="h-12 w-64 border-orange-200 focus:border-orange-400 focus:ring-orange-400 rounded-xl">
                     <SelectValue placeholder="Location" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Dogs</SelectItem>
-                    <SelectItem value="yes">Foster Care</SelectItem>
-                    <SelectItem value="no">At Shelter</SelectItem>
+                    <SelectItem value="all_in_foster">All In Foster</SelectItem>
+                    <SelectItem value="DCAS_in_shelter">DCAS In Shelter</SelectItem>
+                    <SelectItem value="DCAS_in_foster">DCAS In Foster</SelectItem>
+                    <SelectItem value="FCAS_in_shelter">FCAS In Shelter</SelectItem>
+                    <SelectItem value="FCAS_in_foster">FCAS In Foster</SelectItem>
+                    <SelectItem value="CAC_in_shelter">CAC In Shelter</SelectItem>
+                    <SelectItem value="CAC_in_foster">CAC In Foster</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -542,7 +574,7 @@ const Index = () => {
                 onClick={() => {
                   setSearchTerm('');
                   setSelectedBreed('all');
-                  setFosterStatus('all');
+                  setLocationFilter('all');
                 }}
                 className="bg-orange-500 hover:bg-orange-600"
               >

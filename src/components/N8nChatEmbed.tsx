@@ -19,7 +19,7 @@ const N8nChatEmbed = () => {
       ],
       i18n: {
         en: {
-          title: "Dekalb Lovable Chat Assistant 🐾",
+          title: "Post-a-Pup Pal (DeKalb, Fulton & CAC) 🐾",
           subtitle: "Ask about dogs, get Asana data, or create adoption posts. Note: All conversations are recorded for development purposes.",
           footer: "",
           getStarted: "Start a New Conversation",
