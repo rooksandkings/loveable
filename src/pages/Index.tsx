@@ -53,7 +53,7 @@ interface Dog {
   "shelter_location": string;
 }
 
-type SortOption = 'name' | 'age' | 'size' | 'level' | 'weight' | 'dftdEligible';
+type SortOption = 'name' | 'age' | 'size' | 'level' | 'weight' | 'dftdEligible' | 'daysInCare' | 'daysInCareDesc';
 
 const RunningDog = () => (
   <div className="relative">
@@ -326,7 +326,8 @@ const Index = () => {
     return dogs.filter(dog => {
       const matchesSearch = searchTerm === '' || 
         dog.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consolidateBreed(dog["Breed AI"]).toLowerCase().includes(searchTerm.toLowerCase());
+        consolidateBreed(dog["Breed AI"]).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dog["Dog ID"].toString().includes(searchTerm);
       const matchesBreed = selectedBreed === 'all' || 
         consolidateBreed(dog["Breed AI"]) === selectedBreed;
       const isFoster =
@@ -339,6 +340,9 @@ const Index = () => {
           break;
         case 'all_in_foster':
           matchesLocation = isFoster;
+          break;
+        case 'all_in_shelter':
+          matchesLocation = !isFoster;
           break;
         case 'DCAS_in_shelter':
           matchesLocation = dog.shelter_location === 'DCAS' && !isFoster;
@@ -397,6 +401,12 @@ const Index = () => {
           return bEligible - aEligible; // DFTD eligible dogs first
         });
         break;
+      case 'daysInCare':
+        sorted.sort((a, b) => b.Days_in_DCAS - a.Days_in_DCAS);
+        break;
+      case 'daysInCareDesc':
+        sorted.sort((a, b) => a.Days_in_DCAS - b.Days_in_DCAS);
+        break;
       default:
         break;
     }
@@ -412,10 +422,10 @@ const Index = () => {
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-              Find Your Perfect Companion
+              Paw Poster
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-              Every dog deserves a loving home. Browse our adorable rescue dogs and find your new best friend today! 🐾
+              🐾 To be seen is to be saved 🐾
             </p>
 
             {/* Simple Search Bar - disabled while loading */}
@@ -468,10 +478,10 @@ const Index = () => {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-            Find Your Perfect Companion
+            Paw Poster
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Every dog deserves a loving home. Browse our adorable rescue dogs and find your new best friend today! 🐾
+            🐾 To be seen is to be saved 🐾
           </p>
 
           {/* Simple Search Bar */}
@@ -481,7 +491,7 @@ const Index = () => {
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
-                  placeholder="Search by name or breed..."
+                  placeholder="Search by name, looks, or ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 h-12 border-orange-200 focus:border-orange-400 focus:ring-orange-400 rounded-xl text-base"
@@ -492,10 +502,10 @@ const Index = () => {
               <div className="flex gap-2 flex-shrink-0">
                 <Select value={selectedBreed} onValueChange={setSelectedBreed}>
                   <SelectTrigger className="h-12 w-48 border-orange-200 focus:border-orange-400 focus:ring-orange-400 rounded-xl">
-                    <SelectValue placeholder="All Breeds" />
+                    <SelectValue placeholder="All Visuals" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Breeds</SelectItem>
+                    <SelectItem value="all">All Visuals</SelectItem>
                     {uniqueBreeds.map(breed => (
                       <SelectItem key={breed} value={breed}>{breed}</SelectItem>
                     ))}
@@ -508,6 +518,7 @@ const Index = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Dogs</SelectItem>
+                    <SelectItem value="all_in_shelter">All In Shelter</SelectItem>
                     <SelectItem value="all_in_foster">All In Foster</SelectItem>
                     <SelectItem value="DCAS_in_shelter">DCAS In Shelter</SelectItem>
                     <SelectItem value="DCAS_in_foster">DCAS In Foster</SelectItem>
@@ -529,6 +540,8 @@ const Index = () => {
                     <SelectItem value="size">Size</SelectItem>
                     <SelectItem value="level">Level</SelectItem>
                     <SelectItem value="weight">Weight</SelectItem>
+                    <SelectItem value="daysInCare">Oldest</SelectItem>
+                    <SelectItem value="daysInCareDesc">Newest</SelectItem>
                     <SelectItem value="dftdEligible">DFTD Eligible</SelectItem>
                   </SelectContent>
                 </Select>

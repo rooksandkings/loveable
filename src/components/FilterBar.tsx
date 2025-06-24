@@ -56,7 +56,7 @@ const FilterBar = memo(({
               <SelectValue placeholder="Select breed" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Breeds</SelectItem>
+              <SelectItem value="">All Visuals</SelectItem>
               <SelectItem value="Labrador Retriever">Labrador Retriever</SelectItem>
               <SelectItem value="Pit Bull">Pit Bull</SelectItem>
               <SelectItem value="German Shepherd">German Shepherd</SelectItem>

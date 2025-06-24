@@ -11,10 +11,10 @@ const BreedFilter: React.FC<BreedFilterProps> = ({ breeds, selectedBreed, onBree
   return (
     <Select value={selectedBreed} onValueChange={onBreedChange}>
       <SelectTrigger className="border-orange-200">
-        <SelectValue placeholder="All Breeds" />
+        <SelectValue placeholder="All Visuals" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">All Breeds</SelectItem>
+        <SelectItem value="all">All Visuals</SelectItem>
         {breeds.map((breed) => (
           <SelectItem key={breed} value={breed}>
             {breed.charAt(0).toUpperCase() + breed.slice(1)}

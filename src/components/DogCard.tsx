@@ -172,7 +172,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
           <div className="space-y-2 mb-3">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Dog className="h-4 w-4" />
-              <span className="font-medium">Breed:</span>
+              <span className="font-medium">Resembles:</span>
               <span>{breedDisplay}</span>
             </div>
             
@@ -190,7 +190,7 @@ const DogCard: React.FC<DogCardProps> = React.memo<DogCardProps>(({ dog, isFavor
             
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Calendar className="h-4 w-4" />
-              <span>{dog["Days_in_DCAS"]} days in shelter</span>
+              <span>{dog["Days_in_DCAS"]} days in care</span>
             </div>
           </div>
         )}
