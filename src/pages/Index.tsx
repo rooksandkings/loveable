@@ -502,10 +502,10 @@ const Index = () => {
               <div className="flex gap-2 flex-shrink-0">
                 <Select value={selectedBreed} onValueChange={setSelectedBreed}>
                   <SelectTrigger className="h-12 w-48 border-orange-200 focus:border-orange-400 focus:ring-orange-400 rounded-xl">
-                    <SelectValue placeholder="All Visuals" />
+                    <SelectValue placeholder="Resembles All Dogs" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Visuals</SelectItem>
+                    <SelectItem value="all">Resembles All Dogs</SelectItem>
                     {uniqueBreeds.map(breed => (
                       <SelectItem key={breed} value={breed}>{breed}</SelectItem>
                     ))}
