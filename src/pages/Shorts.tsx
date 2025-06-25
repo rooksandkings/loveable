@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpDown, ExternalLink } from 'lucide-react';
+import { ArrowUpDown, ExternalLink, Dog, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,14 +17,19 @@ interface ShortDescription {
   location_kennel: string;
   location_room: string;
   shelter_location: string;
+  mini_pic_1?: string;
+  mini_pic_2?: string;
+  mini_pic_3?: string;
 }
 
 const Shorts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBreed, setSelectedBreed] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
-  const [sortBy, setSortBy] = useState<'name' | 'animal_id' | 'breed_ai'>('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [splitByShelter, setSplitByShelter] = useState(false);
+  const [splitByFosterStatus, setSplitByFosterStatus] = useState(false);
+  const [currentImageIndices, setCurrentImageIndices] = useState<{ [key: string]: number }>({});
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   // Function to extract unique breeds from a breed string
   const extractUniqueBreeds = (breedString: string): string[] => {
@@ -137,6 +142,62 @@ const Shorts = () => {
     return uniqueBreeds;
   };
 
+  // Function to extract just the description text (before the Adopets link)
+  const extractDescriptionText = (fullText: string): string => {
+    if (!fullText) return '';
+    
+    // Find the Adopets link and extract everything before it
+    const adopetsLinkIndex = fullText.indexOf('https://adopt.adopets.com/');
+    if (adopetsLinkIndex !== -1) {
+      return fullText.substring(0, adopetsLinkIndex).trim();
+    }
+    
+    // If no Adopets link found, return the full text
+    return fullText.trim();
+  };
+
+  // Function to clean the name by removing foster-related text
+  const cleanName = (name: string): string => {
+    if (!name) return '';
+    
+    // Remove common foster-related suffixes
+    return name
+      .replace(/\s*-\s*in\s+foster\s*$/i, '')
+      .replace(/\s*-\s*foster\s*$/i, '')
+      .replace(/\s*\(foster\)\s*$/i, '')
+      .replace(/\s*\[foster\]\s*$/i, '')
+      .trim();
+  };
+
+  // Function to get image URL (similar to main page logic)
+  const getImageUrl = (photoUrl: string): string | null => {
+    if (!photoUrl || photoUrl.trim() === '' || photoUrl === 'N/A') {
+      return null;
+    }
+    
+    const cleanUrl = photoUrl.trim();
+    
+    if (cleanUrl.includes('petango.com')) {
+      return cleanUrl;
+    }
+    
+    if (cleanUrl.includes('drive.google.com')) {
+      const fileId = cleanUrl.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+      return fileId ? `https://drive.google.com/uc?id=${fileId}` : null;
+    }
+    
+    return cleanUrl;
+  };
+
+  // Function to get available photos for a dog
+  const getAvailablePhotos = (item: ShortDescription): string[] => {
+    const photos = [];
+    if (item.mini_pic_1) photos.push(item.mini_pic_1);
+    if (item.mini_pic_2) photos.push(item.mini_pic_2);
+    if (item.mini_pic_3) photos.push(item.mini_pic_3);
+    return photos;
+  };
+
   const { data: shortDescriptions = [], isLoading, error } = useQuery({
     queryKey: ['shortDescriptions'],
     queryFn: getAllShortDescriptions,
@@ -219,43 +280,53 @@ const Shorts = () => {
       return matchesSearch && matchesBreed && matchesLocation;
     });
 
-    // Sort data
-    filtered.sort((a, b) => {
-      let aValue = '';
-      let bValue = '';
-
-      switch (sortBy) {
-        case 'name':
-          aValue = a.name || '';
-          bValue = b.name || '';
-          break;
-        case 'animal_id':
-          aValue = a.animal_id || '';
-          bValue = b.animal_id || '';
-          break;
-        case 'breed_ai':
-          aValue = a.breed_ai || '';
-          bValue = b.breed_ai || '';
-          break;
-        default:
-          aValue = a.name || '';
-          bValue = b.name || '';
-      }
-
-      const comparison = aValue.localeCompare(bValue);
-      return sortOrder === 'asc' ? comparison : -comparison;
-    });
-
     return filtered;
-  }, [shortDescriptions, searchTerm, selectedBreed, sortBy, sortOrder, locationFilter]);
+  }, [shortDescriptions, searchTerm, selectedBreed, locationFilter]);
 
-  const handleSort = (field: 'name' | 'animal_id' | 'breed_ai') => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('asc');
-    }
+  // Function to handle image navigation
+  const nextImage = (animalId: string, totalPhotos: number) => {
+    setCurrentImageIndices(prev => ({
+      ...prev,
+      [animalId]: (prev[animalId] || 0 + 1) % totalPhotos
+    }));
+  };
+
+  const prevImage = (animalId: string, totalPhotos: number) => {
+    setCurrentImageIndices(prev => ({
+      ...prev,
+      [animalId]: (prev[animalId] || 0 - 1 + totalPhotos) % totalPhotos
+    }));
+  };
+
+  const setCurrentImageIndex = (animalId: string, index: number) => {
+    setCurrentImageIndices(prev => ({
+      ...prev,
+      [animalId]: index
+    }));
+  };
+
+  // Function to handle checkbox selection
+  const toggleSelection = (animalId: string) => {
+    setSelectedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(animalId)) {
+        newSet.delete(animalId);
+      } else {
+        newSet.add(animalId);
+      }
+      return newSet;
+    });
+  };
+
+  // Function to select all visible items
+  const selectAll = () => {
+    const allIds = filteredAndSortedData.map(item => item.animal_id);
+    setSelectedItems(new Set(allIds));
+  };
+
+  // Function to clear all selections
+  const clearAll = () => {
+    setSelectedItems(new Set());
   };
 
   if (isLoading) {
@@ -292,8 +363,8 @@ const Shorts = () => {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Short Descriptions</h1>
-          <p className="text-gray-600">AI-generated short descriptions for rescue dogs</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Breed Resemblance Post Generator</h1>
+          <p className="text-gray-600">Generate social media posts highlighting AI-identified breed resemblances for rescue dogs</p>
         </div>
 
         {/* Filters */}
@@ -343,10 +414,28 @@ const Shorts = () => {
         </Card>
 
         {/* Results count */}
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <span className="text-gray-600 font-medium">
             {filteredAndSortedData.length} of {shortDescriptions.length} descriptions
           </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={selectAll}
+              className="text-xs"
+            >
+              Select All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearAll}
+              className="text-xs"
+            >
+              Clear All
+            </Button>
+          </div>
         </div>
 
         {/* Table */}
@@ -356,38 +445,20 @@ const Shorts = () => {
               <table className="w-full table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                      <button
-                        onClick={() => handleSort('name')}
-                        className="flex items-center gap-1 hover:text-gray-700"
-                      >
-                        Name
-                        <ArrowUpDown className="h-4 w-4" />
-                      </button>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                      Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
-                      <button
-                        onClick={() => handleSort('animal_id')}
-                        className="flex items-center gap-1 hover:text-gray-700"
-                      >
-                        Animal ID
-                        <ArrowUpDown className="h-4 w-4" />
-                      </button>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                      Pictures
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
-                      <button
-                        onClick={() => handleSort('breed_ai')}
-                        className="flex items-center gap-1 hover:text-gray-700"
-                      >
-                        Breed AI
-                        <ArrowUpDown className="h-4 w-4" />
-                      </button>
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-l-2 border-gray-300">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-l-2 border-gray-300">
                       Short Description
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24 border-l border-gray-200">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32 border-l border-gray-200">
                       Links
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24 border-l border-gray-200">
+                      Add to Post
                     </th>
                   </tr>
                 </thead>
@@ -395,49 +466,169 @@ const Shorts = () => {
                   {filteredAndSortedData.map((item, index) => (
                     <tr key={item.animal_id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                       <td className="px-4 py-4 text-sm font-medium text-gray-900 truncate bg-gray-50">
-                        {item.name || 'N/A'}
+                        <div>
+                          <div className="font-medium">{cleanName(item.name || '')}</div>
+                          {item.shelter_location && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {item.shelter_location === 'DCAS' && 'Dekalb'}
+                              {item.shelter_location === 'FCAS' && 'Fulton'}
+                              {item.shelter_location === 'CAC' && 'CAC'}
+                            </div>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-500 truncate bg-gray-50">
-                        {item.animal_id}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-500 truncate bg-gray-50">
-                        {item.breed_ai || 'N/A'}
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        <div className="relative h-16 w-20">
+                          {(() => {
+                            const availablePhotos = getAvailablePhotos(item);
+                            const currentIndex = currentImageIndices[item.animal_id] || 0;
+                            const currentPhoto = availablePhotos[currentIndex];
+                            const imageUrl = currentPhoto ? getImageUrl(currentPhoto) : null;
+                            const hasMultiplePhotos = availablePhotos.length > 1;
+
+                            if (imageUrl) {
+                              return (
+                                <>
+                                  <img
+                                    src={imageUrl}
+                                    alt={`${cleanName(item.name || '')} - Photo ${currentIndex + 1}`}
+                                    className="h-16 w-16 object-cover rounded border border-gray-200 mx-auto"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                  
+                                  {hasMultiplePhotos && (
+                                    <>
+                                      <button
+                                        onClick={() => prevImage(item.animal_id, availablePhotos.length)}
+                                        className="absolute -left-6 top-1/2 transform -translate-y-1/2 bg-gray-800/90 backdrop-blur-sm p-1 rounded-full hover:bg-gray-700 transition-colors duration-200 shadow-sm"
+                                      >
+                                        <ChevronLeft className="h-3 w-3 text-white" />
+                                      </button>
+                                      <button
+                                        onClick={() => nextImage(item.animal_id, availablePhotos.length)}
+                                        className="absolute -right-6 top-1/2 transform -translate-y-1/2 bg-gray-800/90 backdrop-blur-sm p-1 rounded-full hover:bg-gray-700 transition-colors duration-200 shadow-sm"
+                                      >
+                                        <ChevronRight className="h-3 w-3 text-white" />
+                                      </button>
+                                      
+                                      <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                                        {availablePhotos.map((_, index) => (
+                                          <button
+                                            key={index}
+                                            onClick={() => setCurrentImageIndex(item.animal_id, index)}
+                                            className={`w-1.5 h-1.5 rounded-full transition-colors duration-200 ${
+                                              index === currentIndex ? 'bg-white shadow-sm' : 'bg-white/60'
+                                            }`}
+                                          />
+                                        ))}
+                                      </div>
+                                    </>
+                                  )}
+                                </>
+                              );
+                            } else {
+                              return (
+                                <div className="h-16 w-16 bg-gray-100 rounded border border-gray-200 flex items-center justify-center mx-auto">
+                                  <Dog className="h-6 w-6 text-gray-400" />
+                                </div>
+                              );
+                            }
+                          })()}
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900 border-l-2 border-gray-300">
                         <div className="whitespace-pre-wrap break-words leading-relaxed">
-                          {item.chuya_breed_ai || 'No description available'}
+                          {extractDescriptionText(item.chuya_breed_ai || '')}
                         </div>
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-500 border-l border-gray-200">
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-2">
                           {item.adopets_url && (
                             <Button
-                              variant="outline"
                               size="sm"
                               onClick={() => window.open(item.adopets_url, '_blank')}
-                              className="flex items-center gap-1 text-xs"
+                              className="w-full bg-orange-500 hover:bg-orange-600 text-white border-0 font-medium text-xs py-2 px-3 transition-colors duration-200"
                             >
-                              <ExternalLink className="h-3 w-3" />
                               Adopets
                             </Button>
                           )}
                           {item.asana_permalink_url && (
                             <Button
-                              variant="outline"
                               size="sm"
                               onClick={() => window.open(item.asana_permalink_url, '_blank')}
-                              className="flex items-center gap-1 text-xs"
+                              className="w-full bg-blue-500 hover:bg-blue-600 text-white border-0 font-medium text-xs py-2 px-3 transition-colors duration-200"
                             >
-                              <ExternalLink className="h-3 w-3" />
                               Asana
                             </Button>
                           )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500 border-l border-gray-200">
+                        <div className="flex justify-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(item.animal_id)}
+                            onChange={() => toggleSelection(item.animal_id)}
+                            className="h-4 w-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500 focus:ring-2"
+                          />
                         </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Create Section */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Create Content</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="splitByShelter"
+                    checked={splitByShelter}
+                    onChange={(e) => setSplitByShelter(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  <label htmlFor="splitByShelter" className="text-sm font-medium text-gray-700">
+                    Split by shelter?
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="splitByFosterStatus"
+                    checked={splitByFosterStatus}
+                    onChange={(e) => setSplitByFosterStatus(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  <label htmlFor="splitByFosterStatus" className="text-sm font-medium text-gray-700">
+                    Foster status?
+                  </label>
+                </div>
+              </div>
+              <Button 
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+                onClick={() => {
+                  console.log('Create button clicked with options:', {
+                    splitByShelter,
+                    splitByFosterStatus,
+                    filteredCount: filteredAndSortedData.length
+                  });
+                }}
+              >
+                Create
+              </Button>
             </div>
           </CardContent>
         </Card>

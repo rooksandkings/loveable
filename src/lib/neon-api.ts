@@ -62,6 +62,9 @@ export type ShortDescription = {
   location_kennel: string;
   location_room: string;
   shelter_location: string;
+  mini_pic_1?: string;
+  mini_pic_2?: string;
+  mini_pic_3?: string;
 };
 
 export async function getAllDogs(): Promise<Dog[]> {
@@ -225,19 +228,20 @@ export async function getAllShortDescriptions(): Promise<ShortDescription[]> {
     const result = await sql`
       SELECT 
         s.animal_id, s.chuya_breed_ai, s.name, s.breed_ai, s.adopets_url, s.asana_permalink_url,
-        d.location_kennel, d.location_room, d.shelter_location
+        d.location_kennel, d.location_room, d.shelter_location, d.mini_pic_1, d.mini_pic_2, d.mini_pic_3
       FROM description_short_ai s
-      LEFT JOIN dogs d ON s.animal_id = d.dog_id
+      LEFT JOIN dogs d ON s.animal_id::text = d.dog_id::text
       ORDER BY s.name ASC
     `;
     
     console.log('Raw short descriptions result:', result);
+    console.log('First row sample:', result && (result as any).rows && (result as any).rows[0]);
     
     // Check if result has rows property (array format)
     if (result && (result as any).rows && Array.isArray((result as any).rows)) {
       console.log('Converting array-based short descriptions response to objects');
       const descriptions = (result as any).rows.map((row: any[]) => {
-        return {
+        const description = {
           animal_id: row[0] || '',
           chuya_breed_ai: row[1] || '',
           name: row[2] || '',
@@ -247,7 +251,17 @@ export async function getAllShortDescriptions(): Promise<ShortDescription[]> {
           location_kennel: row[6] || '',
           location_room: row[7] || '',
           shelter_location: row[8] || '',
+          mini_pic_1: row[9] || '',
+          mini_pic_2: row[10] || '',
+          mini_pic_3: row[11] || '',
         };
+        console.log('Processed description:', description.name, {
+          animal_id: description.animal_id,
+          mini_pic_1: description.mini_pic_1,
+          mini_pic_2: description.mini_pic_2,
+          mini_pic_3: description.mini_pic_3
+        });
+        return description;
       });
       return descriptions;
     }
