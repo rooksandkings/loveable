@@ -52,6 +52,18 @@ export type Dog = {
   shelter_location: string;
 };
 
+export type ShortDescription = {
+  animal_id: string;
+  chuya_breed_ai: string;
+  name: string;
+  breed_ai: string;
+  adopets_url: string;
+  asana_permalink_url: string;
+  location_kennel: string;
+  location_room: string;
+  shelter_location: string;
+};
+
 export async function getAllDogs(): Promise<Dog[]> {
   try {
     const result = await sql`
@@ -204,6 +216,46 @@ export async function getDogById(dogId: string): Promise<Dog | null> {
     return (result as any)[0] as Dog || null;
   } catch (error) {
     console.error('Error fetching dog by ID from Neon:', error);
+    throw error;
+  }
+}
+
+export async function getAllShortDescriptions(): Promise<ShortDescription[]> {
+  try {
+    const result = await sql`
+      SELECT 
+        s.animal_id, s.chuya_breed_ai, s.name, s.breed_ai, s.adopets_url, s.asana_permalink_url,
+        d.location_kennel, d.location_room, d.shelter_location
+      FROM description_short_ai s
+      LEFT JOIN dogs d ON s.animal_id = d.dog_id
+      ORDER BY s.name ASC
+    `;
+    
+    console.log('Raw short descriptions result:', result);
+    
+    // Check if result has rows property (array format)
+    if (result && (result as any).rows && Array.isArray((result as any).rows)) {
+      console.log('Converting array-based short descriptions response to objects');
+      const descriptions = (result as any).rows.map((row: any[]) => {
+        return {
+          animal_id: row[0] || '',
+          chuya_breed_ai: row[1] || '',
+          name: row[2] || '',
+          breed_ai: row[3] || '',
+          adopets_url: row[4] || '',
+          asana_permalink_url: row[5] || '',
+          location_kennel: row[6] || '',
+          location_room: row[7] || '',
+          shelter_location: row[8] || '',
+        };
+      });
+      return descriptions;
+    }
+    
+    // Fallback for object-based response
+    return result as ShortDescription[];
+  } catch (error) {
+    console.error('Error fetching short descriptions from Neon:', error);
     throw error;
   }
 } 

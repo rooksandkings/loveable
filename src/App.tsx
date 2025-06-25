@@ -23,6 +23,9 @@ const queryClient = new QueryClient({
 const Index = lazy(() => 
   import(/* webpackChunkName: "index" */ "./pages/Index")
 );
+const Shorts = lazy(() => 
+  import(/* webpackChunkName: "shorts" */ "./pages/Shorts")
+);
 const NotFound = lazy(() => 
   import(/* webpackChunkName: "not-found" */ "./pages/NotFound")
 );
@@ -39,6 +42,7 @@ const Router = () => (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/shorts" element={<Shorts />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
