@@ -463,18 +463,12 @@ const Shorts = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredAndSortedData.map((item, index) => (
                     <tr key={item.animal_id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-4 py-4 text-sm font-medium text-gray-900 truncate bg-gray-50">
+                      <td className="px-4 py-4 text-sm font-medium text-gray-900 truncate bg-gray-50 text-center">
                         <div>
                           <div className="font-medium">{cleanName(item.name || '')}</div>
                           <div className="text-xs text-gray-500 mt-1">
                             {(() => {
-                              const isFoster = 
-                                (item.location_kennel && item.location_kennel.toLowerCase().includes('foster')) ||
-                                (item.location_room && item.location_room.toLowerCase().includes('foster'));
-                              
-                              if (isFoster) {
-                                return 'In Foster';
-                              } else if (item.shelter_location === 'DCAS') {
+                              if (item.shelter_location === 'DCAS') {
                                 return 'Dekalb';
                               } else if (item.shelter_location === 'FCAS') {
                                 return 'Fulton';
@@ -485,6 +479,16 @@ const Shorts = () => {
                               }
                             })()}
                           </div>
+                          {(() => {
+                            const isFoster = 
+                              (item.location_kennel && item.location_kennel.toLowerCase().includes('foster')) ||
+                              (item.location_room && item.location_room.toLowerCase().includes('foster'));
+                            
+                            if (isFoster) {
+                              return <div className="text-xs text-gray-500 mt-1">In Foster</div>;
+                            }
+                            return null;
+                          })()}
                         </div>
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900">
