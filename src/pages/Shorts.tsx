@@ -466,13 +466,25 @@ const Shorts = () => {
                       <td className="px-4 py-4 text-sm font-medium text-gray-900 truncate bg-gray-50">
                         <div>
                           <div className="font-medium">{cleanName(item.name || '')}</div>
-                          {item.shelter_location && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              {item.shelter_location === 'DCAS' && 'Dekalb'}
-                              {item.shelter_location === 'FCAS' && 'Fulton'}
-                              {item.shelter_location === 'CAC' && 'CAC'}
-                            </div>
-                          )}
+                          <div className="text-xs text-gray-500 mt-1">
+                            {(() => {
+                              const isFoster = 
+                                (item.location_kennel && item.location_kennel.toLowerCase().includes('foster')) ||
+                                (item.location_room && item.location_room.toLowerCase().includes('foster'));
+                              
+                              if (isFoster) {
+                                return 'In Foster';
+                              } else if (item.shelter_location === 'DCAS') {
+                                return 'Dekalb';
+                              } else if (item.shelter_location === 'FCAS') {
+                                return 'Fulton';
+                              } else if (item.shelter_location === 'CAC') {
+                                return 'CAC';
+                              } else {
+                                return item.shelter_location || 'Unknown';
+                              }
+                            })()}
+                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900">
@@ -635,24 +647,35 @@ const Shorts = () => {
               
               locationOrder.forEach(location => {
                 if (groupedDogs[location] && groupedDogs[location].length > 0) {
-                  textContent += '<b>' + location + '</b>\n';
+                  // Add location address at the top
+                  if (location === 'Dekalb - In Shelter') {
+                    textContent += '<b>🌾 Dekalb - In Shelter: <i>3280 Chamblee Dunwoody Rd, Chamblee, GA 30341</i></b>\n\n';
+                  } else if (location === 'Community Animal Center') {
+                    textContent += '<b>🐶 Community Animal Center: <i>3180 Presidential Dr, Atlanta, GA 30340</i></b>\n\n';
+                  } else if (location === 'Fulton - In Shelter') {
+                    textContent += '<b>🏛️ Fulton - In Shelter: <i>1251 Fulton Industrial Blvd NW, Atlanta, GA 30336</i></b>\n\n';
+                  } else if (location === 'In Foster') {
+                    textContent += '🏡 Available now in foster. Apply at the link — if you don\'t hear back within a day, follow up here: facebook.com/groups/adoptablepetsoflifeline 🐾\n\n';
+                  }
+                  
                   groupedDogs[location].forEach(dog => {
-                    textContent += extractDescriptionText(dog.chuya_breed_ai || '') + '\n\n';
+                    const description = extractDescriptionText(dog.chuya_breed_ai || '');
+                    const dogName = cleanName(dog.name || '');
+                    
+                    // Make the name bold by finding it in the description
+                    let formattedDescription = description;
+                    if (description.includes(dogName + ' -')) {
+                      formattedDescription = description.replace(dogName + ' -', '<b>' + dogName + '</b> -');
+                    } else if (description.startsWith(dogName)) {
+                      // If name is at the start but without the dash
+                      formattedDescription = '<b>' + dogName + '</b>' + description.substring(dogName.length);
+                    }
+                    
+                    textContent += formattedDescription + '\n\n';
                     if (dog.adopets_url) {
                       textContent += dog.adopets_url + '\n\n';
                     }
                   });
-                  
-                  // Add location address
-                  if (location === 'Dekalb - In Shelter') {
-                    textContent += '🌾 Available now at DeKalb County Animal Services: 3280 Chamblee Dunwoody Rd, Chamblee, GA 30341\n\n';
-                  } else if (location === 'Community Animal Center') {
-                    textContent += '🐶 Available now at Community Animal Center: 3180 Presidential Dr, Atlanta, GA 30340\n\n';
-                  } else if (location === 'Fulton - In Shelter') {
-                    textContent += '🏛️ Available now at 1251 Fulton Industrial Blvd NW, Atlanta, GA 30336\n\n';
-                  } else if (location === 'In Foster') {
-                    textContent += '🏡 Available now in foster. Apply at the link — if you don\'t hear back within a day, follow up here: facebook.com/groups/adoptablepetsoflifeline 🐾\n\n';
-                  }
                 }
               });
               
