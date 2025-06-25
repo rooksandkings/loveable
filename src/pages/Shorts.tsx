@@ -26,8 +26,6 @@ const Shorts = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBreed, setSelectedBreed] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
-  const [splitByShelter, setSplitByShelter] = useState(false);
-  const [splitByFosterStatus, setSplitByFosterStatus] = useState(false);
   const [currentImageIndices, setCurrentImageIndices] = useState<{ [key: string]: number }>({});
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
@@ -584,54 +582,241 @@ const Shorts = () => {
           </CardContent>
         </Card>
 
-        {/* Create Section */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Create Content</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="splitByShelter"
-                    checked={splitByShelter}
-                    onChange={(e) => setSplitByShelter(e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                  <label htmlFor="splitByShelter" className="text-sm font-medium text-gray-700">
-                    Split by shelter?
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="splitByFosterStatus"
-                    checked={splitByFosterStatus}
-                    onChange={(e) => setSplitByFosterStatus(e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                  <label htmlFor="splitByFosterStatus" className="text-sm font-medium text-gray-700">
-                    Foster status?
-                  </label>
-                </div>
-              </div>
-              <Button 
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-                onClick={() => {
-                  console.log('Create button clicked with options:', {
-                    splitByShelter,
-                    splitByFosterStatus,
-                    filteredCount: filteredAndSortedData.length
+        {/* Generate Posts Button */}
+        <div className="mt-6 flex justify-center">
+          <Button 
+            size="lg"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold"
+            onClick={() => {
+              // Get selected items
+              const selectedDogs = filteredAndSortedData.filter(item => 
+                selectedItems.has(item.animal_id)
+              );
+              
+              if (selectedDogs.length === 0) {
+                alert('Please select at least one dog to generate posts.');
+                return;
+              }
+              
+              // Group dogs by location
+              const groupedDogs = selectedDogs.reduce((groups, dog) => {
+                const isFoster = 
+                  (dog.location_kennel && dog.location_kennel.toLowerCase().includes('foster')) ||
+                  (dog.location_room && dog.location_room.toLowerCase().includes('foster'));
+                
+                let location = 'Other';
+                if (isFoster) {
+                  location = 'In Foster';
+                } else if (dog.shelter_location === 'DCAS') {
+                  location = 'Dekalb - In Shelter';
+                } else if (dog.shelter_location === 'FCAS') {
+                  location = 'Fulton - In Shelter';
+                } else if (dog.shelter_location === 'CAC') {
+                  location = 'Community Animal Center';
+                }
+                
+                if (!groups[location]) {
+                  groups[location] = [];
+                }
+                groups[location].push(dog);
+                return groups;
+              }, {} as Record<string, typeof selectedDogs>);
+              
+              // Create plain text content
+              let textContent = '';
+              
+              // Add the selected breed at the top
+              if (selectedBreed !== 'all') {
+                textContent += '<b>Resembles ' + selectedBreed + '</b>\n\n';
+              }
+              
+              // Define the order we want to display locations
+              const locationOrder = ['Fulton - In Shelter', 'Dekalb - In Shelter', 'Community Animal Center', 'In Foster', 'Other'];
+              
+              locationOrder.forEach(location => {
+                if (groupedDogs[location] && groupedDogs[location].length > 0) {
+                  textContent += '<b>' + location + '</b>\n';
+                  groupedDogs[location].forEach(dog => {
+                    textContent += extractDescriptionText(dog.chuya_breed_ai || '') + '\n\n';
+                    if (dog.adopets_url) {
+                      textContent += dog.adopets_url + '\n\n';
+                    }
                   });
-                }}
-              >
-                Create
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                  
+                  // Add location address
+                  if (location === 'Dekalb - In Shelter') {
+                    textContent += '🌾 Available now at DeKalb County Animal Services: 3280 Chamblee Dunwoody Rd, Chamblee, GA 30341\n\n';
+                  } else if (location === 'Community Animal Center') {
+                    textContent += '🐶 Available now at Community Animal Center: 3180 Presidential Dr, Atlanta, GA 30340\n\n';
+                  } else if (location === 'Fulton - In Shelter') {
+                    textContent += '🏛️ Available now at 1251 Fulton Industrial Blvd NW, Atlanta, GA 30336\n\n';
+                  } else if (location === 'In Foster') {
+                    textContent += '🏡 Available now in foster. Apply at the link — if you don\'t hear back within a day, follow up here: facebook.com/groups/adoptablepetsoflifeline 🐾\n\n';
+                  }
+                }
+              });
+              
+              // Add disclaimer at the end
+              textContent += '🎭 Resemblance ≠ reality. We don\'t DNA test — so your "Husky mix" might just be a dramatic mutt with eyeliner. 🧬';
+              
+              // Create content for the new window
+              const windowContent = `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Breed Resemblance Posts - ${selectedDogs.length} Dogs</title>
+                    <style>
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            line-height: 1.6;
+                            margin: 0;
+                            padding: 20px;
+                            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+                            min-height: 100vh;
+                        }
+                        .container {
+                            max-width: 600px;
+                            margin: 0 auto;
+                            background: white;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                            overflow: hidden;
+                        }
+                        .header {
+                            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+                            color: white;
+                            padding: 20px;
+                            text-align: center;
+                        }
+                        .header h1 {
+                            margin: 0;
+                            font-size: 24px;
+                            font-weight: bold;
+                        }
+                        .header p {
+                            margin: 10px 0 0 0;
+                            opacity: 0.9;
+                        }
+                        .content {
+                            padding: 20px;
+                        }
+                        .text-box {
+                            background: #f9fafb;
+                            border: 2px solid #e5e7eb;
+                            border-radius: 8px;
+                            padding: 20px;
+                            font-family: 'Courier New', monospace;
+                            font-size: 14px;
+                            line-height: 1.6;
+                            white-space: pre-wrap;
+                            color: #374151;
+                            min-height: 400px;
+                            overflow-y: auto;
+                        }
+                        .copy-button {
+                            background: #f97316;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-weight: 500;
+                            margin-top: 15px;
+                            width: 100%;
+                        }
+                        .copy-button:hover {
+                            background: #ea580c;
+                        }
+                        .footer {
+                            text-align: center;
+                            padding: 20px;
+                            color: #6b7280;
+                            font-size: 14px;
+                            border-top: 1px solid #e5e7eb;
+                        }
+                        .print-button {
+                            position: fixed;
+                            top: 20px;
+                            right: 20px;
+                            background: #f97316;
+                            color: white;
+                            border: none;
+                            padding: 10px 16px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-weight: 500;
+                        }
+                        .print-button:hover {
+                            background: #ea580c;
+                        }
+                        @media print {
+                            .print-button, .copy-button {
+                                display: none;
+                            }
+                            body {
+                                background: white;
+                            }
+                            .container {
+                                box-shadow: none;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <button class="print-button" onclick="window.print()">🖨️ Print</button>
+                    <div class="container">
+                        <div class="header">
+                            <h1>Breed Resemblance Posts</h1>
+                            <p>${selectedDogs.length} selected dog${selectedDogs.length !== 1 ? 's' : ''} ready for social media</p>
+                        </div>
+                        <div class="content">
+                            <div class="text-box" id="copyText">${textContent}</div>
+                            <button class="copy-button" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+                        </div>
+                        <div class="footer">
+                            <p>Generated by Paw Poster • To be seen is to be saved</p>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        function copyToClipboard() {
+                            const textBox = document.getElementById('copyText');
+                            const text = textBox.textContent || textBox.innerText;
+                            
+                            navigator.clipboard.writeText(text).then(function() {
+                                const button = document.querySelector('.copy-button');
+                                button.textContent = '✅ Copied!';
+                                button.style.background = '#10b981';
+                                
+                                setTimeout(function() {
+                                    button.textContent = '📋 Copy to Clipboard';
+                                    button.style.background = '#f97316';
+                                }, 2000);
+                            }).catch(function(err) {
+                                console.error('Could not copy text: ', err);
+                                alert('Copy failed. Please manually select and copy the text.');
+                            });
+                        }
+                    </script>
+                </body>
+                </html>
+              `;
+              
+              // Open new window with the content
+              const newWindow = window.open('', '_blank', 'width=700,height=800,scrollbars=yes,resizable=yes');
+              if (newWindow) {
+                newWindow.document.write(windowContent);
+                newWindow.document.close();
+              } else {
+                alert('Please allow pop-ups to view the breed resemblance posts.');
+              }
+            }}
+          >
+            Generate Breed Resemblance Posts
+          </Button>
+        </div>
 
         {filteredAndSortedData.length === 0 && (
           <div className="text-center py-16">
