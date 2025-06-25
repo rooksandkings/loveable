@@ -561,22 +561,24 @@ const Shorts = () => {
                       <td className="px-4 py-4 text-sm text-gray-500 border-l border-gray-200">
                         <div className="flex flex-col gap-2">
                           {item.adopets_url && (
-                            <Button
-                              size="sm"
-                              onClick={() => window.open(item.adopets_url, '_blank')}
-                              className="w-full bg-orange-500 hover:bg-orange-600 text-white border-0 font-medium text-xs py-2 px-3 transition-colors duration-200"
+                            <a
+                              href={item.adopets_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="border border-purple-200 text-purple-700 hover:bg-purple-50 px-2 py-1 rounded text-xs text-center transition-colors"
                             >
                               Adopets
-                            </Button>
+                            </a>
                           )}
                           {item.asana_permalink_url && (
-                            <Button
-                              size="sm"
-                              onClick={() => window.open(item.asana_permalink_url, '_blank')}
-                              className="w-full bg-blue-500 hover:bg-blue-600 text-white border-0 font-medium text-xs py-2 px-3 transition-colors duration-200"
+                            <a
+                              href={item.asana_permalink_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="border border-teal-300 text-teal-600 hover:bg-teal-50 px-2 py-1 rounded text-xs text-center transition-colors"
                             >
                               Asana
-                            </Button>
+                            </a>
                           )}
                         </div>
                       </td>
