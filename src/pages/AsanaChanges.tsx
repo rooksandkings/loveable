@@ -12,6 +12,8 @@ const AsanaChanges = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+  const [itemsPerPage, setItemsPerPage] = useState('50');
+  const [overriddenValues, setOverriddenValues] = useState<Record<number, string>>({});
 
   // Function to format date
   const formatDate = (dateString: string): string => {
@@ -102,8 +104,14 @@ const AsanaChanges = () => {
       return matchesSearch && matchesCategory && matchesLocation;
     });
 
+    // Apply pagination
+    if (itemsPerPage !== 'all') {
+      const limit = parseInt(itemsPerPage);
+      filtered = filtered.slice(0, limit);
+    }
+
     return filtered;
-  }, [asanaChanges, searchTerm, selectedCategory, locationFilter]);
+  }, [asanaChanges, searchTerm, selectedCategory, locationFilter, itemsPerPage]);
 
   // Function to handle checkbox selection
   const toggleSelection = (commentGid: number) => {
@@ -180,6 +188,122 @@ const AsanaChanges = () => {
     
     // Default: Tag icon for unknown categories
     return <Tag className="w-5 h-5 text-gray-500" />;
+  };
+
+  // Function to get dropdown options based on category
+  const getCategoryOptions = (category: string): string[] => {
+    const cat = (category || '').toLowerCase();
+    
+    if (cat.includes('crate')) {
+      return [
+        'Override',
+        'Has done well in a crate',
+        'No info',
+        'Working on it',
+        'Crates are scary'
+      ];
+    }
+    
+    if (cat.includes('leash')) {
+      return [
+        'Override',
+        'Walks politely on leash',
+        'Pulls some but manageable',
+        'Strong puller',
+        'Leash bites when excited',
+        'Reactive on leash, distract me with treats',
+        'Leash reactive to small animals',
+        'Leash reactive to dogs',
+        'Leash reactive to people',
+        'Flight risk'
+      ];
+    }
+    
+    if (cat.includes('dog')) {
+      return [
+        'Override',
+        'Lived with dogs',
+        'Has enjoyed interacting with dogs',
+        'Likes some dogs (dog selective)',
+        'Only dog',
+        'Unknown/Not tested'
+      ];
+    }
+    
+    if (cat.includes('cat')) {
+      return [
+        'Override',
+        'Positive history with cats',
+        'Does not like cats',
+        'Could do well with proper introductions',
+        'Unknown/No history'
+      ];
+    }
+    
+    if (cat.includes('kid')) {
+      return [
+        'Override',
+        'Positive history with kids',
+        'Best with older kids',
+        'No kids please',
+        'Unknown'
+      ];
+    }
+    
+    if (cat.includes('potty')) {
+      return [
+        'Override',
+        'Has done well in a home',
+        'Still working on it',
+        'Not potty trained',
+        'Unknown, but happy to learn!'
+      ];
+    }
+    
+    if (cat.includes('cuddle')) {
+      return [
+        'Override',
+        'Let\'s get to know each other before cuddling',
+        'I\'m affectionate with my friends',
+        'Play first, then snuggle time',
+        'Super cuddly!'
+      ];
+    }
+    
+    if (cat.includes('energy') || cat.includes('activity')) {
+      return [
+        'Override',
+        '1- Low energy',
+        '2- Medium energy',
+        '3- High energy',
+        '4- Regular running/hiking partner'
+      ];
+    }
+    
+    if (cat.includes('more about')) {
+      return [
+        'Override',
+        'Loves fetch',
+        'Loves toys',
+        'Knows tricks',
+        'Knows basic commands',
+        'Volunteer favorite',
+        'Staff favorite',
+        'Fast learner',
+        'Loves car rides',
+        'Quiet house guest'
+      ];
+    }
+    
+    return ['Override'];
+  };
+
+  // Function to handle override value change
+  const handleOverrideChange = (commentGid: number, value: string) => {
+    setOverriddenValues(prev => ({
+      ...prev,
+      [commentGid]: value
+    }));
   };
 
   if (isLoading) {
@@ -261,36 +385,10 @@ const AsanaChanges = () => {
           </CardContent>
         </Card>
 
-        {/* Results count */}
-        <div className="mb-4 flex items-center justify-between">
-          <span className="text-gray-600 font-medium">
-            {filteredAndSortedData.length} of {asanaChanges.length} proposed changes
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={selectAll}
-              className="text-xs"
-            >
-              Select All
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearAll}
-              className="text-xs"
-            >
-              Clear All
-            </Button>
-          </div>
-        </div>
-
         {/* Category Legend */}
         <Card className="mb-4">
           <CardContent className="p-4">
-            <div className="text-sm font-medium text-gray-700 mb-3">Category Icons:</div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-xs">
+            <div className="flex flex-wrap justify-between gap-4 text-xs">
               <div className="flex items-center gap-2">
                 {getCategoryIcon('crate')}
                 <span>Crate trained</span>
@@ -331,6 +429,49 @@ const AsanaChanges = () => {
           </CardContent>
         </Card>
 
+        {/* Results count */}
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-gray-600 font-medium">
+            {filteredAndSortedData.length} of {asanaChanges.length} proposed changes
+          </span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Show:</span>
+              <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
+                <SelectTrigger className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                  <SelectItem value="200">200</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-gray-600">per page</span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={selectAll}
+                className="text-xs"
+              >
+                Select All
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAll}
+                className="text-xs"
+              >
+                Clear All
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Table */}
         <Card>
           <CardContent className="p-0">
@@ -347,14 +488,14 @@ const AsanaChanges = () => {
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32 whitespace-nowrap border-r border-gray-200">
                       Current
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32 whitespace-nowrap border-r border-gray-200">
-                      Proposed
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-40 whitespace-nowrap border-r border-gray-200">
+                      Update
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                       Comments
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
-                      Category
+                      Type
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                       Select
@@ -373,7 +514,18 @@ const AsanaChanges = () => {
                         <div>
                           <div className="font-medium">{cleanName(item.name || '')}</div>
                           <div className="text-xs text-gray-500">
-                            {item.shelter_location || 'Unknown'}
+                            {(() => {
+                              const actualShelterLocation = item.shelter_location;
+                              if (actualShelterLocation === 'DCAS') {
+                                return 'Dekalb';
+                              } else if (actualShelterLocation === 'FCAS') {
+                                return 'Fulton';
+                              } else if (actualShelterLocation === 'CAC') {
+                                return 'CAC';
+                              } else {
+                                return actualShelterLocation || 'Unknown';
+                              }
+                            })()}
                           </div>
                           {item.foster_status && (
                             <div className="text-xs text-gray-500">
@@ -387,10 +539,25 @@ const AsanaChanges = () => {
                           {item.current_value || 'N/A'}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 text-center whitespace-nowrap w-32 border-r border-gray-200">
-                        <div className="three-line-ellipsis text-xs" title={item.proposed_value}>
+                      <td className="px-4 py-4 text-sm text-gray-900 text-center w-40 border-r border-gray-200">
+                        <div className="text-xs text-gray-500 mb-2 leading-tight min-h-[2.5rem] flex items-center justify-center">
                           {item.proposed_value || 'N/A'}
                         </div>
+                        <Select 
+                          value={overriddenValues[item.comment_gid] || 'Override'} 
+                          onValueChange={(value) => handleOverrideChange(item.comment_gid, value)}
+                        >
+                          <SelectTrigger className="w-full mx-1 h-8 text-xs" style={{ textAlign: 'center' }}>
+                            <SelectValue placeholder="Override..." />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-60">
+                            {getCategoryOptions(item.asana_category).map((option, index) => (
+                              <SelectItem key={index} value={option} className="text-xs">
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900 border-r border-gray-200">
                         <div className="whitespace-pre-wrap break-words text-xs leading-relaxed">
@@ -439,10 +606,12 @@ const AsanaChanges = () => {
               let summary = `Selected ${selectedChanges.length} proposed changes:\n\n`;
               
               selectedChanges.forEach((change, index) => {
+                const overriddenValue = overriddenValues[change.comment_gid];
+                const finalProposedValue = overriddenValue && overriddenValue !== 'Override' ? overriddenValue : change.proposed_value;
                 summary += `${index + 1}. ${cleanName(change.name)} (${change.animal_id})\n`;
                 summary += `   Category: ${change.asana_category}\n`;
                 summary += `   Current: ${change.current_value || 'N/A'}\n`;
-                summary += `   Proposed: ${change.proposed_value || 'N/A'}\n`;
+                summary += `   Update: ${finalProposedValue || 'N/A'}\n`;
                 summary += `   Comments: ${change.comments_sanitized || 'No comments'}\n\n`;
               });
               
@@ -455,7 +624,8 @@ const AsanaChanges = () => {
                   <head>
                       <meta charset="UTF-8">
                       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                      <title>Asana Proposed Changes Summary</title>
+                      <title>📋 Asana Proposed Changes Summary</title>
+                      <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
                       <style>
                           body {
                               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -526,11 +696,11 @@ const AsanaChanges = () => {
                   <body>
                       <div class="container">
                           <div class="header">
-                              <h1>Asana Proposed Changes Summary</h1>
+                              <h1>📋 Asana Proposed Changes Summary</h1>
                           </div>
                           <div class="content">
                               <div class="text-box" id="copyText">${summary}</div>
-                              <button class="copy-button" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+                              <button class="copy-button" onclick="copyToClipboard()">Push Change (currently copy to clipboard)</button>
                           </div>
                           <div class="footer">
                               <p>Generated by Paw Poster • Review proposed changes from Asana</p>
@@ -548,7 +718,7 @@ const AsanaChanges = () => {
                                   button.style.background = '#10b981';
                                   
                                   setTimeout(function() {
-                                      button.textContent = '📋 Copy to Clipboard';
+                                      button.textContent = 'Push Change (currently copy to clipboard)';
                                       button.style.background = '#3b82f6';
                                   }, 2000);
                               }).catch(function(err) {
