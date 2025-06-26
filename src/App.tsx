@@ -26,6 +26,9 @@ const Index = lazy(() =>
 const Shorts = lazy(() => 
   import(/* webpackChunkName: "shorts" */ "./pages/Shorts")
 );
+const AsanaChanges = lazy(() => 
+  import(/* webpackChunkName: "asana-changes" */ "./pages/AsanaChanges")
+);
 const NotFound = lazy(() => 
   import(/* webpackChunkName: "not-found" */ "./pages/NotFound")
 );
@@ -43,6 +46,7 @@ const Router = () => (
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/shorts" element={<Shorts />} />
+        <Route path="/asana-comment-management" element={<AsanaChanges />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

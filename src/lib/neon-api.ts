@@ -67,6 +67,19 @@ export type ShortDescription = {
   mini_pic_3?: string;
 };
 
+export type AsanaProposedChange = {
+  comment_gid: number;
+  animal_id: string;
+  name: string;
+  shelter_location: string;
+  created_at: string;
+  asana_category: string;
+  comments_sanitized: string;
+  current_value: string;
+  proposed_value: string;
+  foster_status: string;
+};
+
 export async function getAllDogs(): Promise<Dog[]> {
   try {
     const result = await sql`
@@ -270,6 +283,57 @@ export async function getAllShortDescriptions(): Promise<ShortDescription[]> {
     return result as ShortDescription[];
   } catch (error) {
     console.error('Error fetching short descriptions from Neon:', error);
+    throw error;
+  }
+}
+
+export async function getAllAsanaProposedChanges(): Promise<AsanaProposedChange[]> {
+  try {
+    const result = await sql`
+      SELECT 
+        apc.comment_gid, apc.animal_id, apc.name, d.shelter_location, apc.created_at, 
+        apc.asana_category, apc.comments_sanitized, apc.current_value, apc.proposed_value,
+        d.foster_status
+      FROM asana_proposed_change apc
+      LEFT JOIN dogs d ON apc.animal_id::text = d.dog_id::text
+      ORDER BY apc.created_at DESC
+    `;
+    
+    console.log('Raw asana proposed changes result:', result);
+    console.log('First row sample:', result && (result as any).rows && (result as any).rows[0]);
+    
+    // Check if result has rows property (array format)
+    if (result && (result as any).rows && Array.isArray((result as any).rows)) {
+      console.log('Converting array-based asana proposed changes response to objects');
+      const changes = (result as any).rows.map((row: any[]) => {
+        const change = {
+          comment_gid: parseInt(row[0]) || 0,
+          animal_id: row[1] || '',
+          name: row[2] || '',
+          shelter_location: row[3] || '',
+          created_at: row[4] || '',
+          asana_category: row[5] || '',
+          comments_sanitized: row[6] || '',
+          current_value: row[7] || '',
+          proposed_value: row[8] || '',
+          foster_status: row[9] || '',
+        };
+        console.log('Processed asana change:', change.name, {
+          comment_gid: change.comment_gid,
+          animal_id: change.animal_id,
+          asana_category: change.asana_category,
+          shelter_location: change.shelter_location,
+          foster_status: change.foster_status
+        });
+        return change;
+      });
+      return changes;
+    }
+    
+    // Fallback for object-based response
+    return result as AsanaProposedChange[];
+  } catch (error) {
+    console.error('Error fetching asana proposed changes from Neon:', error);
     throw error;
   }
 } 
