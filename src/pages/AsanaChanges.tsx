@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpDown, ExternalLink, MessageSquare, Calendar, Tag, Dog, Cat, Heart, User, Box, Droplets, Info, Link2 } from 'lucide-react';
+import { MessageSquare, Calendar, Tag, Dog, Cat, Heart, Box, Zap, Baby, HelpCircle, GripVertical, Toilet, Minus, Home, Route, Lasso, Scan, ScanBarcode } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,13 +18,16 @@ const AsanaChanges = () => {
     if (!dateString) return '';
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const year = date.getFullYear().toString().slice(-2);
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      const displayMinutes = minutes.toString().padStart(2, '0');
+      
+      return `${month}/${day}/${year}\n${displayHours}:${displayMinutes} ${ampm}`;
     } catch (error) {
       return dateString;
     }
@@ -126,94 +129,57 @@ const AsanaChanges = () => {
     setSelectedItems(new Set());
   };
 
-  // Map category keywords to custom SVG icons
+  // Map category keywords to Lucide icons
   const getCategoryIcon = (category: string) => {
     const cat = (category || '').toLowerCase();
-    if (cat.includes('leash')) {
-      // Leash icon (vertical line with a circle at the bottom)
-      return (
-        <svg className="category-icon" viewBox="0 0 20 20" fill="none" stroke="blue" strokeWidth="2">
-          <line x1="10" y1="3" x2="10" y2="15" />
-          <circle cx="10" cy="16.5" r="2" fill="blue" />
-        </svg>
-      );
-    }
-    if (cat.includes('dog')) {
-      // Dog face icon
-      return (
-        <svg className="category-icon" viewBox="0 0 20 20" fill="none" stroke="blue" strokeWidth="1.5">
-          <circle cx="10" cy="12" r="4" fill="none" />
-          <circle cx="7.5" cy="10" r="1" fill="blue" />
-          <circle cx="12.5" cy="10" r="1" fill="blue" />
-          <ellipse cx="10" cy="14" rx="1.5" ry="1" fill="blue" />
-          <ellipse cx="5.5" cy="7" rx="1.5" ry="2.5" fill="none" stroke="blue" />
-          <ellipse cx="14.5" cy="7" rx="1.5" ry="2.5" fill="none" stroke="blue" />
-        </svg>
-      );
-    }
-    if (cat.includes('cat')) {
-      // Cat face icon
-      return (
-        <svg className="category-icon" viewBox="0 0 20 20" fill="none" stroke="blue" strokeWidth="1.5">
-          <ellipse cx="10" cy="13" rx="4" ry="3" fill="none" />
-          <polygon points="6,10 4,5 8,8" fill="none" stroke="blue" />
-          <polygon points="14,10 16,5 12,8" fill="none" stroke="blue" />
-          <circle cx="8.5" cy="13" r="0.7" fill="blue" />
-          <circle cx="11.5" cy="13" r="0.7" fill="blue" />
-        </svg>
-      );
-    }
-    if (cat.includes('cuddle')) {
-      // Heart icon
-      return (
-        <svg className="category-icon" viewBox="0 0 20 20" fill="blue">
-          <path d="M10 17s-6-4.35-6-8.5A3.5 3.5 0 0 1 10 6a3.5 3.5 0 0 1 6 2.5C16 12.65 10 17 10 17z" />
-        </svg>
-      );
-    }
-    if (cat.includes('kid')) {
-      // User icon
-      return (
-        <svg className="category-icon" viewBox="0 0 20 20" fill="none" stroke="blue" strokeWidth="1.5">
-          <circle cx="10" cy="7" r="3" fill="none" />
-          <ellipse cx="10" cy="15" rx="5" ry="3" fill="none" />
-        </svg>
-      );
-    }
+    
+    // Crate trained
     if (cat.includes('crate')) {
-      // Box icon
-      return (
-        <svg className="category-icon" viewBox="0 0 20 20" fill="none" stroke="blue" strokeWidth="1.5">
-          <rect x="4" y="7" width="12" height="8" fill="none" />
-          <rect x="7" y="10" width="6" height="5" fill="none" />
-        </svg>
-      );
+      return <Home className="w-5 h-5 text-amber-800" />;
     }
+    
+    // Leash skills
+    if (cat.includes('leash')) {
+      return <Lasso className="w-5 h-5 text-purple-600" />;
+    }
+    
+    // Dog interaction
+    if (cat.includes('dog')) {
+      return <Dog className="w-5 h-5 text-blue-600" />;
+    }
+    
+    // Cat interaction
+    if (cat.includes('cat')) {
+      return <Cat className="w-5 h-5 text-orange-500" />;
+    }
+    
+    // Kid interaction
+    if (cat.includes('kid')) {
+      return <Baby className="w-5 h-5 text-pink-500" />;
+    }
+    
+    // Potty training
     if (cat.includes('potty')) {
-      // Droplet icon
-      return (
-        <svg className="category-icon" viewBox="0 0 20 20" fill="blue">
-          <path d="M10 3C10 3 15 10 10 17C5 10 10 3 10 3Z" />
-        </svg>
-      );
+      return <Toilet className="w-5 h-5 text-amber-500" />;
     }
+    
+    // Cuddle meter
+    if (cat.includes('cuddle')) {
+      return <Heart className="w-5 h-5 text-red-500" />;
+    }
+    
+    // Energy/activity level
+    if (cat.includes('energy') || cat.includes('activity')) {
+      return <Zap className="w-5 h-5 text-yellow-600" />;
+    }
+    
+    // More about me
     if (cat.includes('more about')) {
-      // Info icon
-      return (
-        <svg className="category-icon" viewBox="0 0 20 20" fill="none" stroke="blue" strokeWidth="1.5">
-          <circle cx="10" cy="10" r="8" fill="none" />
-          <rect x="9" y="8" width="2" height="5" fill="blue" />
-          <rect x="9" y="5" width="2" height="2" fill="blue" />
-        </svg>
-      );
+      return <HelpCircle className="w-5 h-5 text-green-600" />;
     }
-    // Default: Tag icon
-    return (
-      <svg className="category-icon" viewBox="0 0 20 20" fill="none" stroke="gray" strokeWidth="1.5">
-        <rect x="4" y="8" width="12" height="6" fill="none" />
-        <circle cx="7" cy="11" r="1" fill="gray" />
-      </svg>
-    );
+    
+    // Default: Tag icon for unknown categories
+    return <Tag className="w-5 h-5 text-gray-500" />;
   };
 
   if (isLoading) {
@@ -320,6 +286,51 @@ const AsanaChanges = () => {
           </div>
         </div>
 
+        {/* Category Legend */}
+        <Card className="mb-4">
+          <CardContent className="p-4">
+            <div className="text-sm font-medium text-gray-700 mb-3">Category Icons:</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                {getCategoryIcon('crate')}
+                <span>Crate trained</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {getCategoryIcon('leash')}
+                <span>Leash skills</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {getCategoryIcon('dog')}
+                <span>Dog interaction</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {getCategoryIcon('cat')}
+                <span>Cat interaction</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {getCategoryIcon('kid')}
+                <span>Kid interaction</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {getCategoryIcon('potty')}
+                <span>Potty training</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {getCategoryIcon('cuddle')}
+                <span>Cuddle meter</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {getCategoryIcon('energy')}
+                <span>Energy level</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {getCategoryIcon('more about')}
+                <span>More about me</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Table */}
         <Card>
           <CardContent className="p-0">
@@ -327,22 +338,22 @@ const AsanaChanges = () => {
               <table className="w-full table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                      Dog Info
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16 whitespace-nowrap">
-                      Current
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-40 whitespace-nowrap">
-                      Proposed
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Comments
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24 border-r border-gray-200">
                       Date
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32 border-r border-gray-200">
+                      Animal
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32 whitespace-nowrap border-r border-gray-200">
+                      Current
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32 whitespace-nowrap border-r border-gray-200">
+                      Proposed
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
+                      Comments
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
                       Category
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
@@ -353,7 +364,12 @@ const AsanaChanges = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredAndSortedData.map((item, index) => (
                     <tr key={item.comment_gid} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="px-4 py-4 text-sm text-gray-900 text-center">
+                      <td className="px-4 py-4 text-sm text-gray-900 text-center w-24 border-r border-gray-200">
+                        <div className="whitespace-pre-line text-center text-xs">
+                          {formatDate(item.created_at)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-900 text-center border-r border-gray-200">
                         <div>
                           <div className="font-medium">{cleanName(item.name || '')}</div>
                           <div className="text-xs text-gray-500">
@@ -366,38 +382,24 @@ const AsanaChanges = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 text-center whitespace-nowrap w-16">
-                        <div className="truncate" title={item.current_value}>
+                      <td className="px-4 py-4 text-sm text-gray-900 text-center whitespace-nowrap w-32 border-r border-gray-200">
+                        <div className="three-line-ellipsis text-xs" title={item.current_value}>
                           {item.current_value || 'N/A'}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 text-center whitespace-nowrap w-40">
-                        <div className="two-line-ellipsis" title={item.proposed_value}>
+                      <td className="px-4 py-4 text-sm text-gray-900 text-center whitespace-nowrap w-32 border-r border-gray-200">
+                        <div className="three-line-ellipsis text-xs" title={item.proposed_value}>
                           {item.proposed_value || 'N/A'}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-900">
-                        <div className="max-w-md">
-                          <div className="flex items-start gap-2">
-                            <MessageSquare className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                            <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                              {item.comments_sanitized || 'No comments'}
-                            </div>
-                          </div>
+                      <td className="px-4 py-4 text-sm text-gray-900 border-r border-gray-200">
+                        <div className="whitespace-pre-wrap break-words text-xs leading-relaxed">
+                          {item.comments_sanitized || 'No comments'}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-500 text-center w-32">
-                        <div className="flex items-center gap-2 justify-center">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          <span>{formatDate(item.created_at)}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-900 text-center">
-                        <div className="flex items-center gap-2 justify-center">
+                      <td className="px-4 py-4 text-sm text-gray-900 text-center border-r border-gray-200">
+                        <div className="flex items-center justify-center" title={item.asana_category || 'Unknown'}>
                           {getCategoryIcon(item.asana_category)}
-                          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                            {item.asana_category || 'Unknown'}
-                          </span>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-500 text-center">

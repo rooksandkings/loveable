@@ -159,22 +159,6 @@
     animation-delay: 4s;
   }
 
-  .animate-dog-run {
-    animation: dogRun 0.6s ease-in-out infinite;
-  }
-
-  .animate-ball-bounce {
-    animation: ballBounce 1.2s ease-in-out infinite;
-  }
-
-  .animate-leg-front {
-    animation: legFront 0.6s ease-in-out infinite;
-  }
-
-  .animate-leg-back {
-    animation: legBack 0.6s ease-in-out infinite;
-  }
-
   .n8n-chat__window,
   .n8n-chat__messages,
   .n8n-chat__message,
@@ -220,6 +204,15 @@
     text-overflow: ellipsis;
     white-space: normal;
   }
+
+  .three-line-ellipsis {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+  }
 }
 
 @keyframes blob {
@@ -234,62 +227,5 @@
   }
   100% {
     transform: translate(0px, 0px) scale(1);
-  }
-}
-
-@keyframes dogRun {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-4px) rotate(1deg);
-  }
-}
-
-@keyframes ballBounce {
-  0% {
-    transform: translateX(-100px) translateY(0px) scale(1);
-  }
-  25% {
-    transform: translateX(-50px) translateY(-30px) scale(0.9);
-  }
-  50% {
-    transform: translateX(0px) translateY(0px) scale(1);
-  }
-  75% {
-    transform: translateX(50px) translateY(-20px) scale(0.95);
-  }
-  100% {
-    transform: translateX(100px) translateY(0px) scale(1);
-  }
-}
-
-@keyframes legFront {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(20deg);
-  }
-  50% {
-    transform: rotate(0deg);
-  }
-  75% {
-    transform: rotate(-15deg);
-  }
-}
-
-@keyframes legBack {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-15deg);
-  }
-  50% {
-    transform: rotate(0deg);
-  }
-  75% {
-    transform: rotate(20deg);
   }
 }

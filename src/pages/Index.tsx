@@ -55,55 +55,6 @@ interface Dog {
 
 type SortOption = 'name' | 'age' | 'size' | 'level' | 'weight' | 'dftdEligible' | 'daysInCare' | 'daysInCareDesc';
 
-const RunningDog = () => (
-  <div className="relative">
-    {/* Dog body */}
-    <div className="animate-dog-run">
-      <svg width="120" height="80" viewBox="0 0 120 80" className="text-orange-600">
-        {/* Dog body */}
-        <ellipse cx="60" cy="45" rx="35" ry="20" fill="currentColor" />
-        
-        {/* Dog head */}
-        <circle cx="85" cy="35" r="18" fill="currentColor" />
-        
-        {/* Dog ears */}
-        <ellipse cx="78" cy="25" rx="6" ry="12" fill="currentColor" transform="rotate(-20 78 25)" />
-        <ellipse cx="92" cy="25" rx="6" ry="12" fill="currentColor" transform="rotate(20 92 25)" />
-        
-        {/* Dog tail */}
-        <ellipse cx="25" cy="35" rx="4" ry="15" fill="currentColor" transform="rotate(45 25 35)" />
-        
-        {/* Front legs */}
-        <g className="animate-leg-front" style={{transformOrigin: '70px 60px'}}>
-          <rect x="68" y="60" width="4" height="15" fill="currentColor" />
-        </g>
-        <g className="animate-leg-front" style={{transformOrigin: '78px 60px', animationDelay: '0.3s'}}>
-          <rect x="76" y="60" width="4" height="15" fill="currentColor" />
-        </g>
-        
-        {/* Back legs */}
-        <g className="animate-leg-back" style={{transformOrigin: '45px 60px'}}>
-          <rect x="43" y="60" width="4" height="15" fill="currentColor" />
-        </g>
-        <g className="animate-leg-back" style={{transformOrigin: '55px 60px', animationDelay: '0.3s'}}>
-          <rect x="53" y="60" width="4" height="15" fill="currentColor" />
-        </g>
-        
-        {/* Dog nose */}
-        <circle cx="95" cy="35" r="2" fill="#1f2937" />
-        
-        {/* Dog eye */}
-        <circle cx="88" cy="30" r="2" fill="#1f2937" />
-      </svg>
-    </div>
-    
-    {/* Bouncing ball */}
-    <div className="absolute top-0 left-0">
-      <div className="animate-ball-bounce text-2xl">🎾</div>
-    </div>
-  </div>
-);
-
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBreed, setSelectedBreed] = useState('all');
