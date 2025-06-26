@@ -291,11 +291,9 @@ export async function getAllAsanaProposedChanges(): Promise<AsanaProposedChange[
   try {
     const result = await sql`
       SELECT 
-        apc.comment_gid, apc.animal_id, apc.name, d.shelter_location, apc.created_at, 
-        apc.asana_category, apc.comments_sanitized, apc.current_value, apc.proposed_value,
-        d.foster_status
+        apc.comment_gid, apc.animal_id, apc.name, apc.shelter_location, apc.created_at, 
+        apc.asana_category, apc.comments_sanitized, apc.current_value, apc.proposed_value
       FROM asana_proposed_change apc
-      LEFT JOIN dogs d ON apc.animal_id::text = d.dog_id::text
       ORDER BY apc.created_at DESC
     `;
     
@@ -310,20 +308,19 @@ export async function getAllAsanaProposedChanges(): Promise<AsanaProposedChange[
           comment_gid: parseInt(row[0]) || 0,
           animal_id: row[1] || '',
           name: row[2] || '',
-          shelter_location: row[3] || '',
+          shelter_location: row[3] || '', // Now populated from the table
           created_at: row[4] || '',
           asana_category: row[5] || '',
           comments_sanitized: row[6] || '',
           current_value: row[7] || '',
           proposed_value: row[8] || '',
-          foster_status: row[9] || '',
+          foster_status: '', // Will be populated from dogs data if needed
         };
         console.log('Processed asana change:', change.name, {
           comment_gid: change.comment_gid,
           animal_id: change.animal_id,
           asana_category: change.asana_category,
-          shelter_location: change.shelter_location,
-          foster_status: change.foster_status
+          shelter_location: change.shelter_location
         });
         return change;
       });

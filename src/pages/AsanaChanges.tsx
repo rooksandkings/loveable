@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getAllAsanaProposedChanges, AsanaProposedChange } from '@/lib/neon-api';
+import { getAllAsanaProposedChanges, AsanaProposedChange, getAllDogs } from '@/lib/neon-api';
 
 const AsanaChanges = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,6 +14,7 @@ const AsanaChanges = () => {
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [itemsPerPage, setItemsPerPage] = useState('50');
   const [overriddenValues, setOverriddenValues] = useState<Record<number, string>>({});
+  const [showLatestOnly, setShowLatestOnly] = useState(false);
 
   // Function to format date
   const formatDate = (dateString: string): string => {
@@ -60,6 +61,31 @@ const AsanaChanges = () => {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
+  const { data: dogsData } = useQuery({
+    queryKey: ['dogs'],
+    queryFn: getAllDogs,
+    staleTime: 1000 * 60 * 60 * 12, // 12 hours
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+
+  // Create mapping of animal_id to shelter_location from dogs data
+  const shelterLocationMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (dogsData) {
+      dogsData.forEach(dog => {
+        if (dog.dog_id && dog.shelter_location) {
+          map.set(dog.dog_id, dog.shelter_location);
+        }
+      });
+    }
+    return map;
+  }, [dogsData]);
+
   // Get unique categories for filter
   const uniqueCategories = useMemo(() => {
     const categories = asanaChanges
@@ -82,7 +108,7 @@ const AsanaChanges = () => {
       const matchesCategory = selectedCategory === 'all' || 
         item.asana_category === selectedCategory;
       
-      // Location filtering logic
+      // Location filtering logic - now using shelter_location directly from the table
       let matchesLocation = true;
       switch (locationFilter) {
         case 'all':
@@ -101,8 +127,52 @@ const AsanaChanges = () => {
           matchesLocation = true;
       }
       
-      return matchesSearch && matchesCategory && matchesLocation;
+      // Ignore items where the proposed value is the same as current value
+      const currentValue = (item.current_value || '').trim().toLowerCase();
+      const proposedValue = (item.proposed_value || '').trim().toLowerCase();
+      const hasActualChange = currentValue !== proposedValue;
+      
+      return matchesSearch && matchesCategory && matchesLocation && hasActualChange;
     });
+
+    // Sort by dog name first, then by creation date
+    filtered.sort((a, b) => {
+      const nameA = cleanName(a.name || '').toLowerCase();
+      const nameB = cleanName(b.name || '').toLowerCase();
+      
+      if (nameA !== nameB) {
+        return nameA.localeCompare(nameB);
+      }
+      
+      // If same dog, sort by creation date (newest first)
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+    // If showLatestOnly is enabled, filter to show only the latest change per category per dog
+    if (showLatestOnly) {
+      const latestChanges = new Map<string, AsanaProposedChange>();
+      
+      filtered.forEach(item => {
+        const key = `${cleanName(item.name || '').toLowerCase()}-${item.asana_category}`;
+        if (!latestChanges.has(key)) {
+          latestChanges.set(key, item);
+        }
+      });
+      
+      filtered = Array.from(latestChanges.values());
+      
+      // Re-sort after filtering
+      filtered.sort((a, b) => {
+        const nameA = cleanName(a.name || '').toLowerCase();
+        const nameB = cleanName(b.name || '').toLowerCase();
+        
+        if (nameA !== nameB) {
+          return nameA.localeCompare(nameB);
+        }
+        
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+    }
 
     // Apply pagination
     if (itemsPerPage !== 'all') {
@@ -111,7 +181,7 @@ const AsanaChanges = () => {
     }
 
     return filtered;
-  }, [asanaChanges, searchTerm, selectedCategory, locationFilter, itemsPerPage]);
+  }, [asanaChanges, searchTerm, selectedCategory, locationFilter, itemsPerPage, showLatestOnly]);
 
   // Function to handle checkbox selection
   const toggleSelection = (commentGid: number) => {
@@ -430,44 +500,58 @@ const AsanaChanges = () => {
         </Card>
 
         {/* Results count */}
-        <div className="mb-4 flex items-center justify-between">
-          <span className="text-gray-600 font-medium">
-            {filteredAndSortedData.length} of {asanaChanges.length} proposed changes
-          </span>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Show:</span>
-              <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
-                <SelectTrigger className="w-20">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                  <SelectItem value="200">200</SelectItem>
-                  <SelectItem value="all">All</SelectItem>
-                </SelectContent>
-              </Select>
-              <span className="text-sm text-gray-600">per page</span>
+        <div className="mb-4">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600 font-medium">
+              {filteredAndSortedData.length} of {asanaChanges.length} proposed changes
+            </span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Show:</span>
+                <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                    <SelectItem value="200">200</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-sm text-gray-600">per page</span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAll}
+                  className="text-xs"
+                >
+                  Select All
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearAll}
+                  className="text-xs"
+                >
+                  Clear All
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={selectAll}
-                className="text-xs"
-              >
-                Select All
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearAll}
-                className="text-xs"
-              >
-                Clear All
-              </Button>
+          </div>
+          <div className="mt-2 flex justify-start">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Show only latest change per category per dog</span>
+              <input
+                type="checkbox"
+                id="showLatestOnly"
+                checked={showLatestOnly}
+                onChange={(e) => setShowLatestOnly(e.target.checked)}
+                className="h-4 w-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+              />
             </div>
           </div>
         </div>
@@ -480,7 +564,7 @@ const AsanaChanges = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24 border-r border-gray-200">
-                      Date
+                      Timestamp
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32 border-r border-gray-200">
                       Animal
@@ -492,7 +576,7 @@ const AsanaChanges = () => {
                       Update
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
-                      Comments
+                      Comment
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20 border-r border-gray-200">
                       Type
@@ -515,15 +599,14 @@ const AsanaChanges = () => {
                           <div className="font-medium">{cleanName(item.name || '')}</div>
                           <div className="text-xs text-gray-500">
                             {(() => {
-                              const actualShelterLocation = item.shelter_location;
-                              if (actualShelterLocation === 'DCAS') {
+                              if (item.shelter_location === 'DCAS') {
                                 return 'Dekalb';
-                              } else if (actualShelterLocation === 'FCAS') {
+                              } else if (item.shelter_location === 'FCAS') {
                                 return 'Fulton';
-                              } else if (actualShelterLocation === 'CAC') {
+                              } else if (item.shelter_location === 'CAC') {
                                 return 'CAC';
                               } else {
-                                return actualShelterLocation || 'Unknown';
+                                return item.shelter_location || 'Unknown';
                               }
                             })()}
                           </div>
@@ -603,20 +686,43 @@ const AsanaChanges = () => {
               }
               
               // Create summary for selected changes
-              let summary = `Selected ${selectedChanges.length} proposed changes:\n\n`;
+              let summary = `<table style="width: 100%; border-collapse: collapse; font-family: monospace; font-size: 14px;">
+                <thead>
+                  <tr style="background-color: #f3f4f6; border-bottom: 2px solid #d1d5db;">
+                    <th style="padding: 12px; text-align: left; border: 1px solid #d1d5db; width: 15%;">Name</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #d1d5db; width: 8%;">ID</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #d1d5db; width: 10%;">Location</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #d1d5db; width: 18%;">Field</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #d1d5db; width: 20%;">Current Value</th>
+                    <th style="padding: 12px; text-align: left; border: 1px solid #d1d5db; width: 20%;">Update Value</th>
+                  </tr>
+                </thead>
+                <tbody>`;
               
               selectedChanges.forEach((change, index) => {
                 const overriddenValue = overriddenValues[change.comment_gid];
                 const finalProposedValue = overriddenValue && overriddenValue !== 'Override' ? overriddenValue : change.proposed_value;
-                summary += `${index + 1}. ${cleanName(change.name)} (${change.animal_id})\n`;
-                summary += `   Category: ${change.asana_category}\n`;
-                summary += `   Current: ${change.current_value || 'N/A'}\n`;
-                summary += `   Update: ${finalProposedValue || 'N/A'}\n`;
-                summary += `   Comments: ${change.comments_sanitized || 'No comments'}\n\n`;
+                const location = change.shelter_location === 'DCAS' ? 'Dekalb' : 
+                                change.shelter_location === 'FCAS' ? 'Fulton' : 
+                                change.shelter_location === 'CAC' ? 'CAC' : 
+                                change.shelter_location || 'Unknown';
+                summary += `
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 12px; border: 1px solid #d1d5db;">${cleanName(change.name || '')}</td>
+                    <td style="padding: 12px; border: 1px solid #d1d5db;">${change.animal_id || ''}</td>
+                    <td style="padding: 12px; border: 1px solid #d1d5db;">${location}</td>
+                    <td style="padding: 12px; border: 1px solid #d1d5db;">${change.asana_category || ''}</td>
+                    <td style="padding: 12px; border: 1px solid #d1d5db;">${change.current_value || 'N/A'}</td>
+                    <td style="padding: 12px; border: 1px solid #d1d5db;">${finalProposedValue || 'N/A'}</td>
+                  </tr>`;
               });
               
+              summary += `
+                </tbody>
+              </table>`;
+              
               // Open new window with the summary
-              const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+              const newWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
               if (newWindow) {
                 newWindow.document.write(`
                   <!DOCTYPE html>
@@ -636,7 +742,7 @@ const AsanaChanges = () => {
                               min-height: 100vh;
                           }
                           .container {
-                              max-width: 800px;
+                              max-width: 1200px;
                               margin: 0 auto;
                               background: white;
                               border-radius: 12px;
@@ -662,10 +768,8 @@ const AsanaChanges = () => {
                               border: 2px solid #e2e8f0;
                               border-radius: 8px;
                               padding: 20px;
-                              font-family: 'Courier New', monospace;
                               font-size: 14px;
                               line-height: 1.6;
-                              white-space: pre-wrap;
                               color: #374151;
                               min-height: 400px;
                               overflow-y: auto;
