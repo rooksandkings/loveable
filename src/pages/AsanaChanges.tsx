@@ -128,8 +128,8 @@ const AsanaChanges = () => {
       }
       
       // Ignore items where the proposed value is the same as current value
-      const currentValue = (item.current_value || '').trim().toLowerCase();
-      const proposedValue = (item.proposed_value || '').trim().toLowerCase();
+      const currentValue = (item.current_value || '').trim().toLowerCase().replace(/\.$/, '');
+      const proposedValue = (item.proposed_value || '').trim().toLowerCase().replace(/\.$/, '');
       const hasActualChange = currentValue !== proposedValue;
       
       return matchesSearch && matchesCategory && matchesLocation && hasActualChange;
@@ -544,7 +544,7 @@ const AsanaChanges = () => {
           </div>
           <div className="mt-2 flex justify-start">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Show only latest change per category per dog</span>
+              <span className="text-sm text-gray-600">Show only latest comment per category per dog</span>
               <input
                 type="checkbox"
                 id="showLatestOnly"
