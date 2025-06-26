@@ -567,7 +567,7 @@ const AsanaChanges = () => {
                       Timestamp
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32 border-r border-gray-200">
-                      Animal
+                      Name
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32 whitespace-nowrap border-r border-gray-200">
                       Current
@@ -596,8 +596,8 @@ const AsanaChanges = () => {
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900 text-center border-r border-gray-200">
                         <div>
-                          <div className="font-medium">{cleanName(item.name || '')}</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="font-medium mb-1">{cleanName(item.name || '')}</div>
+                          <div className="text-xs text-gray-500 mb-2">
                             {(() => {
                               if (item.shelter_location === 'DCAS') {
                                 return 'Dekalb';
@@ -610,8 +610,20 @@ const AsanaChanges = () => {
                               }
                             })()}
                           </div>
+                          {item.asana_permalink && (
+                            <div className="text-xs">
+                              <a 
+                                href={item.asana_permalink} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="border border-teal-300 text-teal-600 hover:bg-teal-50 px-2 py-1 rounded text-xs text-center transition-colors"
+                              >
+                                Asana
+                              </a>
+                            </div>
+                          )}
                           {item.foster_status && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 mt-1">
                               {item.foster_status}
                             </div>
                           )}

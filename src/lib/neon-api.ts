@@ -78,6 +78,7 @@ export type AsanaProposedChange = {
   current_value: string;
   proposed_value: string;
   foster_status: string;
+  asana_permalink: string;
 };
 
 export async function getAllDogs(): Promise<Dog[]> {
@@ -292,15 +293,45 @@ export async function getAllAsanaProposedChanges(): Promise<AsanaProposedChange[
     const result = await sql`
       SELECT 
         apc.comment_gid, apc.animal_id, apc.name, apc.shelter_location, apc.created_at, 
-        apc.asana_category, apc.comments_sanitized, apc.current_value, apc.proposed_value
+        apc.asana_category, apc.comments_sanitized, apc.current_value, apc.proposed_value, s.asana_permalink_url
       FROM asana_proposed_change apc
+      LEFT JOIN description_short_ai s ON apc.animal_id = s.animal_id
       ORDER BY apc.created_at DESC
     `;
     
     console.log('Raw asana proposed changes result:', result);
-    console.log('First row sample:', result && (result as any).rows && (result as any).rows[0]);
+    console.log('First row sample:', result && result[0]);
     
-    // Check if result has rows property (array format)
+    // Handle object-based response (which is what we're getting)
+    if (result && Array.isArray(result)) {
+      console.log('Converting object-based asana proposed changes response');
+      const changes = result.map((row: any) => {
+        const change = {
+          comment_gid: parseInt(row.comment_gid) || 0,
+          animal_id: row.animal_id || '',
+          name: row.name || '',
+          shelter_location: row.shelter_location || '',
+          created_at: row.created_at || '',
+          asana_category: row.asana_category || '',
+          comments_sanitized: row.comments_sanitized || '',
+          current_value: row.current_value || '',
+          proposed_value: row.proposed_value || '',
+          foster_status: '',
+          asana_permalink: row.asana_permalink_url || '',
+        };
+        console.log('Processed asana change:', change.name, {
+          comment_gid: change.comment_gid,
+          animal_id: change.animal_id,
+          asana_category: change.asana_category,
+          shelter_location: change.shelter_location,
+          asana_permalink: change.asana_permalink
+        });
+        return change;
+      });
+      return changes;
+    }
+    
+    // Fallback for rows-based response
     if (result && (result as any).rows && Array.isArray((result as any).rows)) {
       console.log('Converting array-based asana proposed changes response to objects');
       const changes = (result as any).rows.map((row: any[]) => {
@@ -308,26 +339,27 @@ export async function getAllAsanaProposedChanges(): Promise<AsanaProposedChange[
           comment_gid: parseInt(row[0]) || 0,
           animal_id: row[1] || '',
           name: row[2] || '',
-          shelter_location: row[3] || '', // Now populated from the table
+          shelter_location: row[3] || '',
           created_at: row[4] || '',
           asana_category: row[5] || '',
           comments_sanitized: row[6] || '',
           current_value: row[7] || '',
           proposed_value: row[8] || '',
-          foster_status: '', // Will be populated from dogs data if needed
+          foster_status: '',
+          asana_permalink: row[9] || '',
         };
         console.log('Processed asana change:', change.name, {
           comment_gid: change.comment_gid,
           animal_id: change.animal_id,
           asana_category: change.asana_category,
-          shelter_location: change.shelter_location
+          shelter_location: change.shelter_location,
+          asana_permalink: change.asana_permalink
         });
         return change;
       });
       return changes;
     }
     
-    // Fallback for object-based response
     return result as AsanaProposedChange[];
   } catch (error) {
     console.error('Error fetching asana proposed changes from Neon:', error);
