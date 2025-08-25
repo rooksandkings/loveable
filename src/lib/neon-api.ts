@@ -237,56 +237,49 @@ export async function getDogById(dogId: string): Promise<Dog | null> {
   }
 }
 
-export async function getAllShortDescriptions(): Promise<ShortDescription[]> {
-  try {
-    const result = await sql`
-      SELECT 
-        s.animal_id, s.chuya_breed_ai, s.name, s.breed_ai, s.adopets_url, s.asana_permalink_url,
-        d.location_kennel, d.location_room, d.shelter_location, d.mini_pic_1, d.mini_pic_2, d.mini_pic_3
-      FROM description_short_ai s
-      LEFT JOIN dogs d ON s.animal_id::text = d.dog_id::text
-      ORDER BY s.name ASC
-    `;
-    
-    console.log('Raw short descriptions result:', result);
-    console.log('First row sample:', result && (result as any).rows && (result as any).rows[0]);
-    
-    // Check if result has rows property (array format)
-    if (result && (result as any).rows && Array.isArray((result as any).rows)) {
-      console.log('Converting array-based short descriptions response to objects');
-      const descriptions = (result as any).rows.map((row: any[]) => {
-        const description = {
-          animal_id: row[0] || '',
-          chuya_breed_ai: row[1] || '',
-          name: row[2] || '',
-          breed_ai: row[3] || '',
-          adopets_url: row[4] || '',
-          asana_permalink_url: row[5] || '',
-          location_kennel: row[6] || '',
-          location_room: row[7] || '',
-          shelter_location: row[8] || '',
-          mini_pic_1: row[9] || '',
-          mini_pic_2: row[10] || '',
-          mini_pic_3: row[11] || '',
-        };
-        console.log('Processed description:', description.name, {
-          animal_id: description.animal_id,
-          mini_pic_1: description.mini_pic_1,
-          mini_pic_2: description.mini_pic_2,
-          mini_pic_3: description.mini_pic_3
-        });
-        return description;
-      });
-      return descriptions;
-    }
-    
-    // Fallback for object-based response
-    return result as ShortDescription[];
-  } catch (error) {
-    console.error('Error fetching short descriptions from Neon:', error);
-    throw error;
+export async function getAllShortDescriptionsNeon(): Promise<ShortDescription[]> {
+  const result = await sql`
+    SELECT
+      n.animal_id,
+      n.name,
+      n.chuya_breed_ai,
+      n.breed_ai,
+      n.adopets_url,
+      n.asana_permalink AS asana_permalink_url,
+      d.location_kennel,
+      d.location_room,
+      d.shelter_location,
+      d.mini_pic_1,
+      d.mini_pic_2,
+      d.mini_pic_3
+    FROM updated_shorts_description_neon n
+    LEFT JOIN dogs d ON d.dog_id::text = n.animal_id::text
+    ORDER BY n.name ASC
+  `;
+
+  const rows: any = (result as any).rows ?? result;
+
+  // handle array-of-arrays or array-of-objects
+  if (Array.isArray(rows) && rows.length && Array.isArray(rows[0])) {
+    return rows.map((r: any[]) => ({
+      animal_id: r[0] ?? '',
+      name: r[1] ?? '',
+      chuya_breed_ai: r[2] ?? '',
+      breed_ai: r[3] ?? '',
+      adopets_url: r[4] ?? '',
+      asana_permalink_url: r[5] ?? '',
+      location_kennel: r[6] ?? '',
+      location_room: r[7] ?? '',
+      shelter_location: r[8] ?? '',
+      mini_pic_1: r[9] ?? '',
+      mini_pic_2: r[10] ?? '',
+      mini_pic_3: r[11] ?? '',
+    }));
   }
+  return rows as ShortDescription[];
 }
+
+
 
 export async function getAllAsanaProposedChanges(): Promise<AsanaProposedChange[]> {
   try {
