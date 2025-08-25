@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-// import { getAllShortDescriptions } from '@/lib/neon-api';
 import { getAllShortDescriptionsNeon } from '@/lib/neon-api';
 
 interface ShortDescription {
@@ -197,17 +196,6 @@ const Shorts = () => {
     return photos;
   };
 
-  /*const { data: shortDescriptions = [], isLoading, error } = useQuery({
-    queryKey: ['shortDescriptions'],
-    queryFn: getAllShortDescriptions,
-    staleTime: 1000 * 60 * 60 * 12, // 12 hours
-    gcTime: 1000 * 60 * 60 * 24, // 24 hours
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-  }); */
 
   const { data: shortDescriptions = [], isLoading, error } = useQuery({
     queryKey: ['shortDescriptions', 'neon'],   // new key avoids stale cache
