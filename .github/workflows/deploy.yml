@@ -1,4 +1,4 @@
- name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -6,12 +6,14 @@ on:
       - main
 
 jobs:
-  build-deploy:
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Set up Node
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -19,10 +21,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build
+      - name: Build project
         run: npm run build
 
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
